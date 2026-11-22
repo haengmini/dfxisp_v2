@@ -1,0 +1,44 @@
+[Description.md "## 1. HLS C++ 소스" checker 편입 및 수정 요약]
+정본 경로: /home/mini/Desktop/dfxisp/dfxisp_essen (읽기 전용, 미수정)
+작업 대상: /home/mini/Desktop/dfxisp/dfxisp_v2
+작성일: 2026-11-23
+
+1. 복사한 파일 목록 및 cmp 결과 (8/8 바이트 동일 PASS)
+- checker/checker.hpp                   == dfxisp_essen/checker/checker.hpp (CMP_OK)
+- checker/checker.cpp                   == dfxisp_essen/checker/checker.cpp (CMP_OK)
+- checker/checker_hysteresis.v          == dfxisp_essen/hls/checker/checker_hysteresis.v (CMP_OK)
+- checker/dfxc_trigger_adapter.v        == dfxisp_essen/hls/checker/dfxc_trigger_adapter.v (CMP_OK)
+- checker/checker_ip.v                  == dfxisp_essen/hls/checker/checker_ip.v (CMP_OK)
+- checker/tb/checker_hysteresis_tb.v    == dfxisp_essen/hls/checker/checker_hysteresis_tb.v (CMP_OK)
+- checker/tb/checker_ip_tb.v            == dfxisp_essen/hls/checker/checker_ip_tb.v (CMP_OK)
+- checker/tb/checker_to_dfxc_tb.v       == dfxisp_essen/hls/checker/checker_to_dfxc_tb.v (CMP_OK)
+신규 문서:
+- checker/README.md (한국어, 구조·상수·배선·분리 이유·pr_latency_probe 의존성·미확인 항목 정리)
+
+2. Description.md 변경 요약 ("## 1. HLS C++ 소스" 절만 수정, 다른 절 미수정)
+- 디렉터리 트리 및 절 첫 안내문(Note): checker/(HLS+RTL+TB+README)를 v2 존재로 갱신하고,
+  미복사 대상을 C-sim 테스트 파일 및 pr_latency_probe.v로 한정함.
+- 1.1절 checker.hpp / checker.cpp: "v2 미복사" -> "v2 존재(바이트 동일)"로 갱신.
+  dark_pixel_threshold를 "보드 실운용 256 (raw12, 16<<4, 출처: dfxisp_essen/experiment_v2/app/zcu_modes.py:33)"로
+  확정 기재하고 기존 (확인 필요) 삭제.
+- 1.1절 신규 항목 3개 추가 (연구 흐름 1단계: 장면 조도 판정 + DFX 전환 트리거 생성, 정적 영역):
+  * 3) checker/checker_hysteresis.v (Schmitt FSM, DWELL_FRAMES=1, pr_busy ack 시 즉시 pr_trigger 해제)
+  * 4) checker/dfxc_trigger_adapter.v (one-hot vs_hw_triggers, pr_busy 및 shutdown_ack 합성)
+  * 5) checker/checker_ip.v (통합 래퍼, 읽기 전용 s_axi_status 맵, pr_latency_probe 의존성 명시)
+- 1.2~1.4절(NormalISP, LowlightISP, vectors): 미수정 유지.
+- 1.5절 checker 테스트 항목: checker_hls_tb.cpp의 4096이 배치 하네스 전용 값(보드 256 아님)임을 명시,
+  고정 골든 어서션 부재 (확인 필요) 유지, checker/tb/ RTL 테스트벤치 3종(v2 존재) 병기.
+
+3. 남긴 "(확인 필요)" 항목 목록
+(1) pr_latency_probe.v의 dfxisp_v2 편입 여부
+    - checker_ip.v가 pr_latency_probe(u_probe)를 인스턴스하므로 현재 v2 단독 컴파일 불가.
+(2) 통합 BD에서 rm_ap_idle 실제 연결 및 PS(controller.py) permit/commit과의 관계
+    - dfxc_trigger_adapter.v는 vs_rm_shutdown_ack = vs_rm_shutdown_req & rm_ap_idle로 정의.
+    - dfxisp_essen/unified_work/frame_idle_safety_gate/safety_gate_report_ko.md에는 당시 통합 BD에서
+      rm_ap_idle이 AXI GPIO(0xA3020000) 출력에 연결되고 최종 ACK가 request & GPIO permit & 3 drain으로
+      합성된다고 기록되어 있으나, 최종 10월 보드 실운용 XSA/BD 배선과의 일치 및 controller.py 연동은 확인 필요.
+(3) NormalISP / LowlightISP C-sim 테스트의 dfxisp_v2 편입 및 정본 함수 연동 여부 (기존 유지)
+(4) checker C-sim 테스트의 dfxisp_v2 편입 및 고정 골든 어서션 테스트 유무 (기존 유지)
+
+4. 테스트벤치 실행 여부
+- 미실행

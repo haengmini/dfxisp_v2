@@ -205,18 +205,26 @@ dfxisp_v2/
 ├── vectors/
 │   ├── NormalISP_vectors.csv       # 🟢 v2 존재 (10 cases, RAW 528 / RGB 528)
 │   └── LowlightISP_vectors.csv     # 🟢 v2 존재 (11 cases, RAW 592 / RGB 147)
-├── checker/                        # 🟡 v2 미복사 — 정본 대조 병기 (확인 필요)
+├── checker/                        # 🟢 v2 존재 (HLS 코어 + RTL 3종 + RTL TB 3종 + README)
+│   ├── checker.hpp / checker.cpp   # 🟢 v2 존재 (정본과 바이트 동일)
+│   ├── checker_hysteresis.v        # 🟢 v2 존재 (정본과 바이트 동일)
+│   ├── dfxc_trigger_adapter.v      # 🟢 v2 존재 (정본과 바이트 동일)
+│   ├── checker_ip.v                # 🟢 v2 존재 (pr_latency_probe 의존성 있음)
+│   ├── README.md                   # 🟢 v2 존재
+│   └── tb/                         # 🟢 v2 존재 (RTL 테스트벤치 3종)
 └── (C-sim 테스트 파일)              # 🟡 v2 미복사 — 정본 대조 병기 (확인 필요)
 ```
 
 > [!NOTE]
-> `checker` HLS 소스 및 C-sim 테스트 파일은 현재 `dfxisp_v2`에 포함되어 있지 않으므로, 정본(`dfxisp_essen`)에서 직접 확인한 내용을 병기하고 `v2` 편입 여부는 `(확인 필요)`로 표시한다.
+> `NormalISP`, `LowlightISP`, `vectors`, `checker`(HLS + RTL 3종 + RTL 테스트벤치 3종)는 `dfxisp_v2`에 복사 완료되었다. C-sim 테스트 파일과 `pr_latency_probe.v`는 현재 `dfxisp_v2`에 포함되어 있지 않으므로 정본(`dfxisp_essen`) 확인 내용을 병기하고 편입 여부는 `(확인 필요)`로 표시한다.
 
 ---
 
 ### 1.1 장면 조도 판정 (정적 영역 — Scene Checker)
 
-#### `checker/checker.hpp` · 🟡 *v2 미복사 (`dfxisp_essen/checker/checker.hpp` 확인) — v2 편입 여부 `(확인 필요)`*
+> **연구 흐름 위치:** 1단계 — 장면 조도 판정 + DFX 전환 트리거 생성 (정적 영역)
+
+#### 1) `checker/checker.hpp` · 🟢 *v2 존재 (`dfxisp_essen/checker/checker.hpp`와 바이트 동일)*
 
 정적 영역 장면 판정기의 핵심 로직 헤더로, 외부 헤더 의존성 없이 열거형을 인라인 정의한다.
 
@@ -233,11 +241,11 @@ $$\text{dark} \times 100 > 64 \cdot N \;\Rightarrow\; \texttt{ABOVE\_ENTER}, \qq
 - **핵심 상수:** `DARK_RATIO_PCT=62`, `HYST_ENTER_PCT=64`, `HYST_EXIT_PCT=60`, `LOOP_TRIPCOUNT min=16 max=2073600`
 - **강제 모드 동작:** <kbd>NORMAL</kbd> / <kbd>LOW_LIGHT</kbd> 입력 시 `dark_count=0`과 대응 플래그를 즉시 반환 (`checker_select_mode` 2개 오버로드)
 - **입출력:** 입력 `raw(uint16_t*)`, `width`, `height`, `mode`, `dark_pixel_threshold`, `verdict_pct`, `enter_pct`, `exit_pct` / 출력 반환값(선택 모드), `hyst_flags`, `dark_count`
-- **비고:** 실운용 `dark_pixel_threshold`($T_{\text{dark}}$)는 파일 내부 상수로 고정되어 있지 않고 `s_axilite` 런타임 인자로 전달됨 — 보드 실운용값 `(확인 필요)`
+- **실운용 임계값:** 보드 실운용 `dark_pixel_threshold` = **256** (`raw12`, `16<<4`, 출처: `dfxisp_essen/experiment_v2/app/zcu_modes.py:33`, `s_axilite` 런타임 인자로 전달)
 
 </details>
 
-#### `checker/checker.cpp` · 🟡 *v2 미복사 (`dfxisp_essen/checker/checker.cpp` 확인, `hls/src/checker.cpp`와 바이트 동일) — v2 편입 여부 `(확인 필요)`*
+#### 2) `checker/checker.cpp` · 🟢 *v2 존재 (`dfxisp_essen/checker/checker.cpp` 및 `hls/src/checker.cpp`와 바이트 동일)*
 
 정적 영역 장면 판정기의 HLS 합성 최상위 함수 `checker_scan` 래퍼다. `!raw_bayer || width <= 0 || height <= 0` 가드 시 `selected_mode=NORMAL`, `hyst_flags=BELOW_EXIT`, `dark_count=0`을 즉시 반환한다.
 
@@ -257,6 +265,29 @@ extern "C" void checker_scan(
 - `hyst_flags`: `ap_vld` (후단 RTL 히스테리시스 블록 `checker_hysteresis.v` 직결용)
 
 </details>
+
+#### 3) `checker/checker_hysteresis.v` · 🟢 *v2 존재 (`dfxisp_essen/hls/checker/checker_hysteresis.v`와 바이트 동일)*
+
+정적 영역 Schmitt 히스테리시스 모드 중재기 및 PR 트리거 생성 RTL 모듈이다.
+
+- **역할:** `checker_scan`의 `hyst_flags`(`above_enter`, `below_exit`)와 `flags_vld` 펄스를 받아 안정 모드(`mode`, 리셋 시 `0=NORMAL`)를 유지하고, 모드 전환 시 `pr_trigger`를 올려 `pr_busy` ack 수신 즉시 해제한다. 요청 대기 또는 재구성 중(`pr_trigger || pr_busy`)에는 판정을 동결하며, 전환 직후 `DWELL_FRAMES` 동안 재전환을 억제한다.
+- **파라미터 및 입출력:** 파라미터 `DWELL_FRAMES=1`(기본값, 카운터 폭 `DWELL_W` 자동 계산) / 입력 `clk`, `rst_n`, `flags_vld`, `above_enter`, `below_exit`, `pr_busy` / 출력 `pr_trigger`, `mode`
+
+#### 4) `checker/dfxc_trigger_adapter.v` · 🟢 *v2 존재 (`dfxisp_essen/hls/checker/dfxc_trigger_adapter.v`와 바이트 동일)*
+
+`checker_hysteresis.v`와 AMD DFX Controller IP(PG374) 사이를 연결하는 어댑터 RTL 모듈이다.
+
+- **역할:** `pr_trigger && !pr_busy` 조건에서 `mode`에 따라 one-hot 하드웨어 트리거 `vs_hw_triggers`(`2'b01`=Normal, `2'b10`=Lowlight)를 생성하고, `pr_busy = vs_rm_shutdown_req | vs_rm_decouple`, `vs_rm_shutdown_ack = vs_rm_shutdown_req & rm_ap_idle`을 조합 논리로 합성한다.
+- **입출력:** 입력 `clk`, `rst_n`, `mode`, `pr_trigger`, `vs_rm_shutdown_req`, `vs_rm_decouple`, `rm_ap_idle` / 출력 `pr_busy`, `vs_hw_triggers[1:0]`, `vs_rm_shutdown_ack`
+- **비고:** 통합 BD에서 `rm_ap_idle` 핀의 실제 연결 및 PS(`controller.py`) `permit`/`commit`과의 연동 관계는 `checker/README.md` 참조 `(확인 필요)`.
+
+#### 5) `checker/checker_ip.v` · 🟢 *v2 존재 (`dfxisp_essen/hls/checker/checker_ip.v`와 바이트 동일)*
+
+`checker_scan`, `checker_hysteresis`, `dfxc_trigger_adapter` 및 `pr_latency_probe`를 묶는 정적 영역 통합 래퍼 RTL이다.
+
+- **역할:** `checker_scan`의 `s_axi_control`(7-bit 주소)과 `m_axi_gmem0`를 외부로 패스스루하고, `hyst_flags_ap_vld` 기준 `frame_cnt`와 `meas_valid` 기준 `swap_cnt`를 집계해 읽기 전용 `s_axi_status`(6-bit 주소, 쓰기 시 `SLVERR`) 맵(`0x00 stable_mode`, `0x04 frame_cnt`, `0x08 swap_cnt`, `0x0C drain_cycles`, `0x10 swap_cycles`)으로 노출한다.
+- **파라미터 및 입출력:** 파라미터 `DWELL_FRAMES=1` / 포트 `aclk`, `aresetn`, `s_axi_control_*`, `checker_interrupt`, `m_axi_gmem0_*`, `s_axi_status_*`, `vs_hw_triggers[1:0]`, `vs_rm_shutdown_req`, `vs_rm_shutdown_ack`, `vs_rm_decouple`, `rm_ap_idle`
+- **의존성 주의:** 내부에서 `pr_latency_probe`(`u_probe`)를 인스턴스하므로 `pr_latency_probe.v`가 없는 현재 `dfxisp_v2` 단독으로는 컴파일되지 않음 — `pr_latency_probe.v` 편입 여부 `(확인 필요)`.
 
 ---
 
@@ -389,8 +420,12 @@ RAW12 (RGGB)
   - `dfxisp_essen/LowlightISP/LowlightISP_tb.cpp`: 정본 `LowlightISP`/`LowlightISP_dev` 대상 구조·정상성 7항목(`bin_dim` 해상도·`0x00RRGGBB`, null/0 가드, 평탄 입력 전 화소 균일성, G 램프 단조성, 포화 4095→`0x00FFFFFF` 정확 일치, `BINNING` vs `SUBSAMPLE` 차이, `LowlightISP()==LowlightISP_dev(BINNING)`) 검사. **골든 CSV 미로드.**
   - `dfxisp_essen/hls/tests/test_lowlight_isp_csim.cpp` + `golden_csv.hpp`: 골든 CSV 비트 일치 대조 및 스모크 테스트(페데스탈 16→0, 감마 비선형 리프트, 비닝 잡음 분산 감소, 포화, 가드 등)를 수행하나, 정본 `LowlightISP`가 아닌 중복 사본 함수(`lowlight_isp`, `rm_lowlight_isp_top`) 호출.
 
-- **`checker` C-sim 테스트** · 🟡 *v2 미복사 — v2 편입 및 골든 어서션 테스트 유무 `(확인 필요)`*
-  - `dfxisp_essen/hls/results/tools/checker_hls_tb.cpp`(+ `checker_hls_csim_tb.cpp`): 매니페스트 CSV(`raw_path,width,height,stem,source`)로 실제 RAW 바이너리 파일을 읽어 `checker_scan(..., DFXISP_MODE_AUTO, 4096, 62, 64, 60, ...)`의 `dark_count`, `hyst_flags`, `selected_mode`를 CSV로 출력하는 배치 실행 하네스. 고정 골든 벡터 대조 어서션 테스트는 `dfxisp_essen`에서 확인되지 않음 `(확인 필요)`.
+- **`checker` C-sim 테스트 및 RTL 테스트벤치**
+  - **C-sim (🟡 v2 미복사 — v2 편입 및 골든 어서션 테스트 유무 `(확인 필요)`):** `dfxisp_essen/hls/results/tools/checker_hls_tb.cpp`(+ `checker_hls_csim_tb.cpp`)는 매니페스트 CSV(`raw_path,width,height,stem,source`)로 실제 RAW 바이너리 파일을 읽어 `checker_scan(..., DFXISP_MODE_AUTO, 4096, 62, 64, 60, ...)`의 `dark_count`, `hyst_flags`, `selected_mode`를 CSV로 출력하는 배치 실행 하네스다. 여기 전달되는 `4096`은 배치 하네스 전용 값이며 보드 실운용 값(`256`)이 아니다. 고정 골든 벡터 대조 어서션 테스트는 `dfxisp_essen`에서 확인되지 않음 `(확인 필요)`.
+  - **RTL 테스트벤치 (🟢 v2 존재 — `checker/tb/`, 정본과 바이트 동일):**
+    - `checker/tb/checker_hysteresis_tb.v`: Schmitt 밴드(인밴드 무변화), `pr_busy` ack까지 트리거 유지, 중복 트리거 방지, `DWELL_FRAMES=1` 억제 자가 검증 TB.
+    - `checker/tb/checker_to_dfxc_tb.v`: `checker_hysteresis → dfxc_trigger_adapter → [PG374 계약 모델 BFM] → rm_ap_idle` 모델 연동 TB.
+    - `checker/tb/checker_ip_tb.v`: `checker_scan` 합성 RTL 포함 `checker_ip` 통합 TB(AXI-Lite 맵 + 버스트 DDR 읽기 모델).
 
 ---
 
