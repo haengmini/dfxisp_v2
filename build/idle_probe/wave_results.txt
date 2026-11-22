@@ -1,0 +1,100 @@
+b_both LowlightISP (ps) ap_rst_n ap_start ap_done ap_idle
+         0 0 0 0 1
+    110100 1 0 0 1
+    294000 1 1 0 0
+    302000 1 1 0 0
+   2302000 1 1 1 0
+   2306000 1 0 0 1
+starts= 9 busy/ap_idle mismatched events= 0 busy=0 before done events= 0 unknown busy events= 0
+b_both NormalISP (ps) ap_rst_n ap_start ap_done ap_idle
+         0 0 0 0 1
+    110100 1 0 0 1
+    294000 1 1 0 0
+    302000 1 1 0 0
+   5966000 1 1 1 0
+   5970000 1 0 0 1
+starts= 7 busy/ap_idle mismatched events= 0 busy=0 before done events= 0 unknown busy events= 0
+b_hs LowlightISP (ps) ap_rst_n ap_start ap_done ap_idle
+         0 0 0 0 1
+    110100 1 0 0 1
+    242000 1 1 0 0
+    250000 1 1 0 0
+   2250000 1 1 1 0
+   2254000 1 0 0 1
+starts= 10 busy/ap_idle mismatched events= 0 busy=0 before done events= 0 unknown busy events= 0
+b_hs NormalISP (ps) ap_rst_n ap_start ap_done ap_idle
+         0 0 0 0 1
+    110100 1 0 0 1
+    242000 1 1 0 0
+    250000 1 1 0 0
+   5914000 1 1 1 0
+   5918000 1 0 0 1
+starts= 8 busy/ap_idle mismatched events= 0 busy=0 before done events= 0 unknown busy events= 0
+c_join LowlightISP (ps) ap_rst_n ap_start ap_done ap_idle busy
+         0 0 0 0 1 0
+    110100 1 0 0 1 0
+    294000 1 1 0 0 1
+    302000 1 1 0 0 1
+   2302000 1 1 1 0 0
+   2306000 1 0 0 1 1
+starts= 9 busy/ap_idle mismatched events= 18 busy=0 before done events= 0 unknown busy events= 0
+c_join NormalISP (ps) ap_rst_n ap_start ap_done ap_idle busy
+         0 0 0 0 1 0
+    110100 1 0 0 1 0
+    294000 1 1 0 0 1
+    302000 1 1 0 0 1
+   5966000 1 1 1 0 0
+   5970000 1 0 0 1 1
+starts= 7 busy/ap_idle mismatched events= 14 busy=0 before done events= 0 unknown busy events= 0
+c_none LowlightISP (ps) ap_rst_n ap_start ap_done ap_idle busy
+         0 0 0 0 1 0
+    110100 1 0 0 1 0
+    294000 1 1 0 0 1
+    302000 1 1 0 0 1
+   2302000 1 1 1 0 0
+   2306000 1 0 0 1 1
+starts= 9 busy/ap_idle mismatched events= 18 busy=0 before done events= 0 unknown busy events= 0
+c_none NormalISP (ps) ap_rst_n ap_start ap_done ap_idle busy
+         0 0 0 0 1 0
+    110100 1 0 0 1 0
+    294000 1 1 0 0 1
+    302000 1 1 0 0 1
+   5966000 1 1 1 0 0
+   5970000 1 0 0 1 1
+starts= 7 busy/ap_idle mismatched events= 14 busy=0 before done events= 0 unknown busy events= 0
+c_reg LowlightISP (ps) ap_rst_n ap_start ap_done ap_idle busy
+         0 0 0 0 1 0
+    110100 1 0 0 1 0
+    294000 1 1 0 0 0
+    298000 1 1 0 0 1
+    302000 1 1 0 0 0
+   2302000 1 1 1 0 0
+   2306000 1 0 0 1 0
+starts= 9 busy/ap_idle mismatched events= 27 busy=0 before done events= 18 unknown busy events= 0
+c_reg NormalISP (ps) ap_rst_n ap_start ap_done ap_idle busy
+         0 0 0 0 1 0
+    110100 1 0 0 1 0
+    294000 1 1 0 0 0
+    298000 1 1 0 0 1
+    302000 1 1 0 0 0
+   5966000 1 1 1 0 0
+   5970000 1 0 0 1 0
+starts= 7 busy/ap_idle mismatched events= 21 busy=0 before done events= 14 unknown busy events= 0
+c_vld LowlightISP (ps) ap_rst_n ap_start ap_done ap_idle busy busy_ap_vld
+         0 0 0 0 1 x 0
+    110100 1 0 0 1 x 0
+    294000 1 1 0 0 1 1
+    298000 1 1 0 0 x 0
+    302000 1 1 0 0 x 0
+   2302000 1 1 1 0 0 1
+   2306000 1 0 0 1 x 0
+starts= 9 busy/ap_idle mismatched events= 20 busy=0 before done events= 0 unknown busy events= 29
+c_vld NormalISP (ps) ap_rst_n ap_start ap_done ap_idle busy busy_ap_vld
+         0 0 0 0 1 x 0
+    110100 1 0 0 1 x 0
+    294000 1 1 0 0 1 1
+    298000 1 1 0 0 x 0
+    302000 1 1 0 0 x 0
+   5966000 1 1 1 0 0 1
+   5970000 1 0 0 1 x 0
+starts= 7 busy/ap_idle mismatched events= 16 busy=0 before done events= 0 unknown busy events= 23

@@ -1,6 +1,8 @@
-# checker — 정적 영역 장면 조도 판정 및 DFX 전환 트리거 IP
+# checker — PL 정적 요소 장면 조도 판정 및 DFX 전환 트리거 IP
 
-정본(`/home/mini/Desktop/dfxisp/dfxisp_essen`)에서 수정 없이 복사한 정적 영역(Static Region) 장면 판정기 HLS 코어와 RTL 제어 모듈이다.
+PL 정적 요소(Static Logic)의 장면 판정기 HLS 코어와 RTL 제어 모듈이다. `checker.hpp`는 주석 정리를 제외한 코드가 정본과 동일하다(`g++ -E -P` 대조). `checker.cpp`는 정본과, RTL 4개는 TF의 `local_ip_repo/checker_no_user/src/`와 바이트 단위로 일치한다(`cmp` 대조).
+
+연구용 `checker_reference_tb.cpp`는 독립 정수 계산으로 출력 세 개를 대조한다. C-sim 22개와 C/RTL co-sim 21개를 통과했으며, 널 포인터 가드는 C-sim에서 검증했다. [HLS 실행 결과](../hls/RESULTS.md)
 
 ## 구성
 
@@ -13,7 +15,7 @@
 4. **`pr_latency_probe.v` (RTL)**  
    `checker_ip.v`가 인스턴스(`u_probe`)하는 PG374 경계 지연 계측 모듈이다. 제어 경로에 개입하지 않고 `drain_cycles`(shutdown req→ack)와 `swap_cycles`(trigger→decouple 해제)를 카운트해 `meas_valid` 펄스로 래치한다.
 5. **`checker_ip.v` (RTL)**  
-   ①~④를 통합하는 정적 영역 래퍼다. 최종 통합 BD 기준(`timeout_fixed/local_ip_repo/checker_no_user/src/checker_ip.v`)을 채택했으며, 초기본(`hls/checker/checker_ip.v`) 대비 차이는 미사용 AXI USER 사이드밴드 포트(`AWUSER`/`WUSER`/`ARUSER`/`RUSER`/`BUSER`) 제거(출력 미연결, 입력 응답 USER `1'b0` 고정)뿐이다. `checker_scan`의 `s_axi_control`(7-bit 주소)과 `m_axi_gmem0`는 외부로 연결하고, 읽기 전용 `s_axi_status` 맵을 제공한다(쓰기 시 `SLVERR` 응답, 상태 불변).
+   ①~④를 통합하는 PL 정적 요소 래퍼다. 최종 통합 BD 기준(`timeout_fixed/local_ip_repo/checker_no_user/src/checker_ip.v`)을 채택했으며, 초기본(`hls/checker/checker_ip.v`) 대비 차이는 미사용 AXI USER 사이드밴드 포트(`AWUSER`/`WUSER`/`ARUSER`/`RUSER`/`BUSER`) 제거(출력 미연결, 입력 응답 USER `1'b0` 고정)뿐이다. `checker_scan`의 `s_axi_control`(7-bit 주소)과 `m_axi_gmem0`는 외부로 연결하고, 읽기 전용 `s_axi_status` 맵을 제공한다(쓰기 시 `SLVERR` 응답, 상태 불변).
    - `0x00`: `stable_mode` (bit 0)
    - `0x04`: `frame_cnt` (32-bit)
    - `0x08`: `swap_cnt` (32-bit)

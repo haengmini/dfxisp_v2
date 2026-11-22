@@ -1,6 +1,6 @@
-# dfx_shell — 정적 영역 DFX 제어·안전·ICAP 브리지 RTL
+# dfx_shell — PL 정적 요소 DFX 제어·안전·ICAP 브리지 RTL
 
-정본(`/home/mini/Desktop/dfxisp/dfxisp_essen`, 최종 통합 BD 기준 `timeout_fixed`)에서 수정 없이 복사한 정적 영역(Static Region) 직접 작성 RTL 4종이다.
+PL 정적 요소(Static Logic) RTL 4개는 정본의 최종 통합 설계 `timeout_fixed`와 바이트 단위로 일치한다(`cmp` 대조). ICAP 브리지는 TF 프로젝트의 `sources_1/imports/rtl/`에서, 나머지 3개는 TF 루트에서 대조했다.
 
 ## 역할 구분: AMD IP vs 사용자 안전 로직
 
@@ -20,13 +20,13 @@
 ## 모듈별 상세
 
 ### 1. `icap_dfx_bridge.v`
-- **역할:** DFX Controller와 Zynq UltraScale+ `ICAPE3` 프리미티브를 연결하는 정적 셸 브리지다.
+- **역할:** DFX Controller와 Zynq UltraScale+ `ICAPE3` 프리미티브를 연결하는 PL 정적 요소 브리지다.
 - **포트(신호명은 DFX Controller 기준):**
   - 입력: `icap_clk` → `ICAPE3.CLK`, `icap_o[31:0]` → `ICAPE3.I`, `icap_csib` → `ICAPE3.CSIB`, `icap_rdwrb` → `ICAPE3.RDWRB`
   - 출력: `icap_i[31:0]` ← `ICAPE3.O`, `icap_avail` ← `ICAPE3.AVAIL`, `icap_prdone` ← `ICAPE3.PRDONE`, `icap_prerror` ← `ICAPE3.PRERROR`
 
 ### 2. `dfx_safety_guard.v`
-- **파라미터:** `TIMEOUT_CYCLES = 1024`
+- **파라미터:** RTL 기본값은 `TIMEOUT_CYCLES=1024`이며, 최종 BD는 `TIMEOUT_CYCLES=10000000`으로 설정한다(`TF/edit_bd.tcl:8–12`).
 - **입출력:**
   - 입력: `clk`, `rst_n`, `ctrl[7:0]`, `candidate[1:0]`, `rm_idle`, `drain_ctrl`, `drain_read`, `drain_write`, `shutdown_req`, `decouple`, `event_error`, `status_valid`, `dfx_status[31:0]`
   - 출력: `hw_triggers[1:0]`, `shutdown_ack`, `guard_status[31:0]`
@@ -55,9 +55,9 @@
 
 ---
 
-## 통합 BD 연결 관계 (`TF/integrate.tcl` 확인 범위)
+## 최종 통합 BD 연결
 
-`dfxisp_essen/unified_work/frame_idle_safety_gate/corrective_contract/timeout_fixed/integrate.tcl`에서 직접 확인된 연결만 기재한다.
+TF의 `project/dfx_zcu104.srcs/sources_1/bd/NormalISP_zcu104_design1/NormalISP_zcu104_design1.bd`에서 `design.nets`와 `design.interface_nets`를 대조했다. [최종 BD 연결과 IP 설정](../build/ch2_facts.md)
 
 | 출발 핀 / 인터페이스 | 도착 핀 / 인터페이스 | 비고 |
 |---|---|---|
@@ -68,12 +68,17 @@
 | `dfx_controller_0/vsm_VS_0_event_error` | `response_error_or/Op1` | 1-bit OR (`util_vector_logic`) |
 | `response_observer/fault_now` | `response_error_or/Op2` | 조합 선행 오류 신호 |
 | `response_error_or/Res` | `safety_guard/event_error` | DFXC 오류 또는 AXI 오류 시 가드 fault 래치 |
-| `checker_ip` ↔ `safety_guard` ↔ `dfx_controller_0` 나머지 핀 및 `icap_dfx_bridge` 연결 | `(확인 필요)` | `TF/integrate.tcl`은 `response_observer` 추가 스크립트이므로 전체 배선은 별도 BD 확인 필요 |
+| `isp_rp/rm_ap_idle` | `safety_guard/rm_idle`, `checker_ip_0/rm_ap_idle` | BD 키 `isp_rp_rm_ap_idle`. 정본은 두 ISP의 HLS 생성 Verilog에 `assign rm_ap_idle = ap_idle;`을 삽입했다(`TF/idle_ip_repo/NormalISP/hdl/verilog/NormalISP.v:277`, LowlightISP도 277행). |
+| `checker_ip_0/vs_hw_triggers` → `safety_guard/candidate` | `safety_guard/hw_triggers` → DFXC `vsm_VS_0_hw_triggers` | checker 내부 `dfxc_trigger_adapter`가 후보를 생성하고 가드가 전환 요청을 승인한다. |
+| `safety_guard/shutdown_ack` | DFXC `vsm_VS_0_rm_shutdown_ack` | 가드는 요청, permit, RM idle, 세 경로의 drain 및 오류 상태로 ACK를 산출한다(`TF/dfx_safety_guard.v:28–31`). |
+| permit GPIO `gpio_io_o[7:0]`; 가드 `guard_status[31:0]` | `safety_guard/ctrl`; GPIO `gpio2_io_i` | BD 키 `frame_idle_permit_gpio_gpio_io_o`, `safety_guard_guard_status` |
+| DFXC `icap_o`, `icap_rdwrb`, `icap_csib`; 브리지 `icap_i`, `icap_avail`, `icap_prdone`, `icap_prerror` | 상대 모듈의 같은 이름 핀 | BD 키 `dfx_controller_0_icap_*`, `icap_dfx_bridge_0_icap_*` |
+
+`safety_gate_report_ko.md:30`의 GPIO에서 `rm_ap_idle`을 공급하는 배선은 가드 도입 이전 설계 기준이다. 최종 BD는 RM idle과 PS permit을 가드의 별도 입력으로 받는다. PS는 GPIO로 permit/commit을 쓰고 `GPIO+8`에서 상태를 폴링한다(`experiment_v2/app/controller.py:124–158`).
+
+10월 실험과 11월 19일 재현의 보관 부팅 이미지 및 두 파셜은 10월 매니페스트와 SHA-256이 일치한다. 두 파셜과 부팅 이미지의 PL 페이로드는 TF의 해당 산출물과 바이트가 다르다. [비트스트림 비교와 출처](../build/ch2_facts.md)
 
 ## 확인 필요 항목
 
-- `dfx_safety_guard.v`의 `rm_idle` 입력이 최종 BD에서 RM의 실제 `ap_idle`에 연결되는지, GPIO(SW permit)에 연결되는지 `(확인 필요)`.
-- 최종 BD에서 `dfxc_trigger_adapter.v`가 `dfx_safety_guard.v`와 함께 쓰이는지, `dfx_safety_guard.v`가 대체하는지 `(확인 필요)`.
-- 2026년 10월 보드 실험 및 11월 19일 재현 시점의 비트스트림이 TF 설계(`unified_final_v2/`)와 동일한지 `(확인 필요)`.
-- PS 소프트웨어(`dfxisp_essen/experiment_v2/app/controller.py` — `ENABLE|PERMIT` 설정 후 `COMMIT` 상승 에지 발행, `GPIO+8`로 `guard_status` 폴링)의 `permit`/`commit` 제어와 HW `shutdown_ack` 간의 정확한 BD 배선·동작 관계 `(확인 필요)`.
+- TF에서 POR 수정 보드 셸로 이어지는 구성 프레임 수준의 차이와 11월 19일 SD·보드 파일의 현장 해시 `(확인 필요)`.
 - 로컬 PG374 문서(`pg374.pdf`, v1.0, 2020)와 Vivado 2024.1 `dfx_controller` IP 동작의 완전 일치 여부 `(확인 필요)`.

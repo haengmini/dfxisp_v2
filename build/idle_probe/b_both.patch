@@ -1,0 +1,20 @@
+--- a/NormalISP/NormalISP.cpp
++++ b/NormalISP/NormalISP.cpp
+@@ -215,6 +215,7 @@
+ #pragma HLS INTERFACE s_axilite port=height bundle=control
+ #pragma HLS INTERFACE s_axilite port=out_width bundle=control
+ #pragma HLS INTERFACE s_axilite port=out_height bundle=control
++#pragma HLS INTERFACE ap_ctrl_hs port=return
+ #pragma HLS INTERFACE s_axilite port=return bundle=control
+     if (!raw_bayer || !rgb_out || width <= 0 || height <= 0) {
+         if (out_width) *out_width = 0;
+--- a/LowlightISP/LowlightISP.cpp
++++ b/LowlightISP/LowlightISP.cpp
+@@ -180,6 +180,7 @@
+ #pragma HLS INTERFACE s_axilite port=height bundle=control
+ #pragma HLS INTERFACE s_axilite port=out_width bundle=control
+ #pragma HLS INTERFACE s_axilite port=out_height bundle=control
++#pragma HLS INTERFACE ap_ctrl_hs port=return
+ #pragma HLS INTERFACE s_axilite port=return bundle=control
+     if (!raw_bayer || !rgb_out || width <= 0 || height <= 0) {
+         if (out_width) *out_width = 0;

@@ -1,0 +1,100 @@
+--- a/NormalISP/NormalISP.cpp
++++ b/NormalISP/NormalISP.cpp
+@@ -206,7 +206,7 @@
+ 
+ extern "C" void NormalISP(
+     const uint16_t* raw_bayer, uint32_t* rgb_out, int width, int height,
+-    int* out_width, int* out_height) {
++    int* out_width, int* out_height, volatile bool* busy) {
+ #pragma HLS INTERFACE m_axi port=raw_bayer offset=slave bundle=gmem0 depth=2048
+ #pragma HLS INTERFACE m_axi port=rgb_out offset=slave bundle=gmem1 depth=2048
+ #pragma HLS INTERFACE s_axilite port=raw_bayer bundle=control
+@@ -216,12 +216,15 @@
+ #pragma HLS INTERFACE s_axilite port=out_width bundle=control
+ #pragma HLS INTERFACE s_axilite port=out_height bundle=control
+ #pragma HLS INTERFACE s_axilite port=return bundle=control
++#pragma HLS INTERFACE ap_none port=busy
++    *busy = true;
+     if (!raw_bayer || !rgb_out || width <= 0 || height <= 0) {
+         if (out_width) *out_width = 0;
+         if (out_height) *out_height = 0;
+-        return;
+-    }
++    } else {
+     run_normal_isp(raw_bayer, rgb_out, width, height, NORMAL_ISP_AWB_ON);
+     if (out_width) *out_width = width;
+     if (out_height) *out_height = height;
++    }
++    *busy = false;
+ }
+--- a/NormalISP/NormalISP.hpp
++++ b/NormalISP/NormalISP.hpp
+@@ -26,4 +26,4 @@
+     int width,
+     int height,
+     int* out_width,
+-    int* out_height);
++    int* out_height, volatile bool* busy);
+--- a/NormalISP/NormalISP_reference_tb.cpp
++++ b/NormalISP/NormalISP_reference_tb.cpp
+@@ -52,7 +52,8 @@
+         if (awb_mode == NORMAL_ISP_AWB_ON) {
+             std::vector<uint32_t> top_rgb(kAxiDepth, UINT32_MAX);
+             int top_w = 0, top_h = 0;
+-            NormalISP(raw.data(), top_rgb.data(), in_w, in_h, &top_w, &top_h);
++            bool busy = true;
++            NormalISP(raw.data(), top_rgb.data(), in_w, in_h, &top_w, &top_h, &busy);
+             ok &= check_output(test, "NormalISP", out_w, out_h, top_w, top_h, rgb, top_rgb);
+         }
+         if (ok) ++passed;
+--- a/LowlightISP/LowlightISP.cpp
++++ b/LowlightISP/LowlightISP.cpp
+@@ -171,7 +171,7 @@
+ 
+ extern "C" void LowlightISP(
+     const uint16_t* raw_bayer, uint32_t* rgb_out, int width, int height,
+-    int* out_width, int* out_height) {
++    int* out_width, int* out_height, volatile bool* busy) {
+ #pragma HLS INTERFACE m_axi port=raw_bayer offset=slave bundle=gmem0 depth=2048
+ #pragma HLS INTERFACE m_axi port=rgb_out offset=slave bundle=gmem1 depth=2048
+ #pragma HLS INTERFACE s_axilite port=raw_bayer bundle=control
+@@ -181,14 +181,17 @@
+ #pragma HLS INTERFACE s_axilite port=out_width bundle=control
+ #pragma HLS INTERFACE s_axilite port=out_height bundle=control
+ #pragma HLS INTERFACE s_axilite port=return bundle=control
++#pragma HLS INTERFACE ap_none port=busy
++    *busy = true;
+     if (!raw_bayer || !rgb_out || width <= 0 || height <= 0) {
+         if (out_width) *out_width = 0;
+         if (out_height) *out_height = 0;
+-        return;
+-    }
++    } else {
+     int ow = 0, oh = 0;
+     run_lowlight_isp(raw_bayer, rgb_out, width, height,
+                      LOWLIGHT_ISP_BIN_BINNING, ow, oh);
+     if (out_width) *out_width = ow;
+     if (out_height) *out_height = oh;
++    }
++    *busy = false;
+ }
+--- a/LowlightISP/LowlightISP.hpp
++++ b/LowlightISP/LowlightISP.hpp
+@@ -26,4 +26,4 @@
+     int width,
+     int height,
+     int* out_width,
+-    int* out_height);
++    int* out_height, volatile bool* busy);
+--- a/LowlightISP/LowlightISP_reference_tb.cpp
++++ b/LowlightISP/LowlightISP_reference_tb.cpp
+@@ -52,7 +52,8 @@
+         if (bin_mode == LOWLIGHT_ISP_BIN_BINNING) {
+             std::vector<uint32_t> top_rgb(kAxiDepth, UINT32_MAX);
+             int top_w = 0, top_h = 0;
+-            LowlightISP(raw.data(), top_rgb.data(), in_w, in_h, &top_w, &top_h);
++            bool busy = true;
++            LowlightISP(raw.data(), top_rgb.data(), in_w, in_h, &top_w, &top_h, &busy);
+             ok &= check_output(test, "LowlightISP", out_w, out_h, top_w, top_h, rgb, top_rgb);
+         }
+         if (ok) ++passed;
