@@ -242,18 +242,25 @@ dfxisp_v2/
 ├── vectors/
 │   ├── NormalISP_vectors.csv       # 🟢 v2 존재 (10 cases, RAW 528 / RGB 528)
 │   └── LowlightISP_vectors.csv     # 🟢 v2 존재 (11 cases, RAW 592 / RGB 147)
-├── checker/                        # 🟢 v2 존재 (HLS 코어 + RTL 3종 + RTL TB 3종 + README)
+├── checker/                        # 🟢 v2 존재 (HLS 코어 + RTL 4종 + RTL TB 3종 + README)
 │   ├── checker.hpp / checker.cpp   # 🟢 v2 존재
 │   ├── checker_hysteresis.v        # 🟢 v2 존재
 │   ├── dfxc_trigger_adapter.v      # 🟢 v2 존재
-│   ├── checker_ip.v                # 🟢 v2 존재 (pr_latency_probe 의존성 있음)
+│   ├── pr_latency_probe.v          # 🟢 v2 존재
+│   ├── checker_ip.v                # 🟢 v2 존재 (TF 최종본 기준)
 │   ├── README.md                   # 🟢 v2 존재
 │   └── tb/                         # 🟢 v2 존재 (RTL 테스트벤치 3종)
+├── dfx_shell/                      # 🟢 v2 존재 (정적 영역 DFX 제어·안전·ICAP 브리지 RTL 4종 + README)
+│   ├── dfx_safety_guard.v          # 🟢 v2 존재
+│   ├── axi_response_error_observer.v # 🟢 v2 존재
+│   ├── axi_response_monitor_wrapper.v # 🟢 v2 존재
+│   ├── icap_dfx_bridge.v           # 🟢 v2 존재
+│   └── README.md                   # 🟢 v2 존재
 └── (C-sim 테스트 파일)              # 🟡 v2 미복사 — 정본 대조 병기 (확인 필요)
 ```
 
 > [!NOTE]
-> `NormalISP`, `LowlightISP`, `vectors`, `checker`(HLS + RTL 3종 + RTL 테스트벤치 3종)는 `dfxisp_v2`에 복사 완료되었다. C-sim 테스트 파일과 `pr_latency_probe.v`는 현재 `dfxisp_v2`에 포함되어 있지 않으므로 정본(`dfxisp_essen`) 확인 내용을 병기하고 편입 여부는 `(확인 필요)`로 표시한다.
+> 이 절은 **HLS C++ 소스 + 정적 영역 RTL** 구성을 함께 다룬다. `NormalISP`, `LowlightISP`, `vectors`, `checker`(HLS + RTL 4종 + RTL 테스트벤치 3종), `dfx_shell`(정적 영역 DFX 제어·안전·ICAP 브리지 RTL 4종)는 `dfxisp_v2`에 편입 완료되었다. C-sim 테스트 파일은 현재 `dfxisp_v2`에 포함되어 있지 않으므로 정본(`dfxisp_essen`) 확인 내용을 병기하고 편입 여부는 `(확인 필요)`로 표시한다.
 
 ---
 
@@ -316,15 +323,54 @@ extern "C" void checker_scan(
 
 - **역할:** `pr_trigger && !pr_busy` 조건에서 `mode`에 따라 one-hot 하드웨어 트리거 `vs_hw_triggers`(`2'b01`=Normal, `2'b10`=Lowlight)를 생성하고, `pr_busy = vs_rm_shutdown_req | vs_rm_decouple`, `vs_rm_shutdown_ack = vs_rm_shutdown_req & rm_ap_idle`을 조합 논리로 합성한다.
 - **입출력:** 입력 `clk`, `rst_n`, `mode`, `pr_trigger`, `vs_rm_shutdown_req`, `vs_rm_decouple`, `rm_ap_idle` / 출력 `pr_busy`, `vs_hw_triggers[1:0]`, `vs_rm_shutdown_ack`
-- **비고:** 통합 BD에서 `rm_ap_idle` 핀의 실제 연결 및 PS(`controller.py`) `permit`/`commit`과의 연동 관계는 `checker/README.md` 참조 `(확인 필요)`.
 
-#### 5) `checker/checker_ip.v` · 🟢 *v2 존재*
+#### 5) `checker/pr_latency_probe.v` · 🟢 *v2 존재*
 
-`checker_scan`, `checker_hysteresis`, `dfxc_trigger_adapter` 및 `pr_latency_probe`를 묶는 정적 영역 통합 래퍼 RTL이다.
+`checker_ip.v` 내부(`u_probe`)에서 PG374 경계 지연을 계측하는 보조 RTL 모듈이다.
 
-- **역할:** `checker_scan`의 `s_axi_control`(7-bit 주소)과 `m_axi_gmem0`를 외부로 패스스루하고, `hyst_flags_ap_vld` 기준 `frame_cnt`와 `meas_valid` 기준 `swap_cnt`를 집계해 읽기 전용 `s_axi_status`(6-bit 주소, 쓰기 시 `SLVERR`) 맵(`0x00 stable_mode`, `0x04 frame_cnt`, `0x08 swap_cnt`, `0x0C drain_cycles`, `0x10 swap_cycles`)으로 노출한다.
-- **파라미터 및 입출력:** 파라미터 `DWELL_FRAMES=1` / 포트 `aclk`, `aresetn`, `s_axi_control_*`, `checker_interrupt`, `m_axi_gmem0_*`, `s_axi_status_*`, `vs_hw_triggers[1:0]`, `vs_rm_shutdown_req`, `vs_rm_shutdown_ack`, `vs_rm_decouple`, `rm_ap_idle`
-- **의존성 주의:** 내부에서 `pr_latency_probe`(`u_probe`)를 인스턴스하므로 `pr_latency_probe.v`가 없는 현재 `dfxisp_v2` 단독으로는 컴파일되지 않음 — `pr_latency_probe.v` 편입 여부 `(확인 필요)`.
+- **역할:** 제어 경로에 개입하지 않고 `vs_rm_shutdown_req`→`vs_rm_shutdown_ack` 구간(`drain_cycles`)과 `trigger_seen`→`vs_rm_decouple` 해제 구간(`swap_cycles`)을 카운트해 `meas_valid` 펄스로 결과를 래치한다.
+- **입출력:** 입력 `clk`, `rst_n`, `trigger_seen`, `vs_rm_shutdown_req`, `vs_rm_shutdown_ack`, `vs_rm_decouple` / 출력 `drain_cycles[31:0]`, `swap_cycles[31:0]`, `meas_valid`
+
+#### 6) `checker/checker_ip.v` · 🟢 *v2 존재 (TF 최종본 기준)*
+
+`checker_scan`, `checker_hysteresis`, `dfxc_trigger_adapter`, `pr_latency_probe`를 통합하는 정적 영역 래퍼 RTL이다.
+
+- **역할:** `checker_scan`의 `s_axi_control`(7-bit 주소)과 `m_axi_gmem0`(미사용 AXI USER 포트 제거, 응답 USER `1'b0` 고정)를 외부로 연결하고, `hyst_flags_ap_vld` 기준 `frame_cnt`와 `meas_valid` 기준 `swap_cnt`를 집계해 읽기 전용 `s_axi_status`(6-bit 주소, 쓰기 시 `SLVERR`) 맵(`0x00 stable_mode`, `0x04 frame_cnt`, `0x08 swap_cnt`, `0x0C drain_cycles`, `0x10 swap_cycles`)으로 노출한다.
+- **파라미터 및 입출력:** 파라미터 `DWELL_FRAMES=1` / 포트 `aclk`, `aresetn`, `s_axi_control_*`, `checker_interrupt`, `m_axi_gmem0_*`(USER 포트 제외), `s_axi_status_*`, `vs_hw_triggers[1:0]`, `vs_rm_shutdown_req`, `vs_rm_shutdown_ack`, `vs_rm_decouple`, `rm_ap_idle`
+
+---
+
+### 1.1b 정적 영역 DFX 전환 제어 · 안전 · ICAP 브리지 (`dfx_shell/`)
+
+> **연구 흐름 위치:** 정적 영역 — DFX 전환 제어/안전 (상세: `dfx_shell/README.md`)
+
+#### 7) `dfx_shell/dfx_safety_guard.v` · 🟢 *v2 존재*
+
+트리거 발행 전 `permit`/`commit` 승인, 취소, 타임아웃, fault 래치를 담당하는 사용자 안전 게이트 RTL이다.
+
+- **역할:** `ctrl[7:0]`(`[0]=enable [1]=permit [2]=commit [3]=cancel [4]=fault [5]=recover [6]=recovery_verified`)과 DFXC/drain/RM 상태를 감시해, 안전 조건 충족 시에만 1사이클 `hw_triggers`와 `shutdown_ack`를 출력한다. 트리거 발행 전(`pending`)에만 취소를 허용하며, `inflight` 중 취소나 오류·타임아웃 발생 시 fail-closed `fault`를 래치한다.
+- **파라미터 및 입출력:** 파라미터 `TIMEOUT_CYCLES=1024` / 입력 `clk`, `rst_n`, `ctrl[7:0]`, `candidate[1:0]`, `rm_idle`, `drain_ctrl`, `drain_read`, `drain_write`, `shutdown_req`, `decouple`, `event_error`, `status_valid`, `dfx_status[31:0]` / 출력 `hw_triggers[1:0]`, `shutdown_ack`, `guard_status[31:0]`
+
+#### 8) `dfx_shell/axi_response_error_observer.v` · 🟢 *v2 존재*
+
+정적 PL 클럭에서 AXI 읽기/쓰기 응답의 `SLVERR`/`DECERR`(`rresp[1]`/`bresp[1]`)을 수동 감시하는 오류 관측기 RTL이다.
+
+- **역할:** `rvalid && rready && rresp[1]` 또는 `bvalid && bready && bresp[1]` 발생 시 `read_fault`/`write_fault`를 래치하고, 조합 선행 신호 `fault_now`를 즉시 출력한다. `safe_reset_req && safe_reset_confirm && quiescent && !rvalid && !bvalid`일 때만 해제된다(보조 모듈 `response_authorization_gate` 포함).
+- **입출력:** 입력 `clk`, `rst_n`, `rvalid`, `rready`, `rresp[1:0]`, `bvalid`, `bready`, `bresp[1:0]`, `safe_reset_req`, `safe_reset_confirm`, `quiescent` / 출력 `read_fault`, `write_fault`, `fault_now`, `fault_hold`
+
+#### 9) `dfx_shell/axi_response_monitor_wrapper.v` · 🟢 *v2 존재*
+
+기존 AXI4 연결을 유지한 채 `axi_shutdown_gmem0/M_AXI`와 `axi_shutdown_gmem1/M_AXI`를 수동 감시하기 위한 `MONITOR` 모드 BD 래퍼 RTL이다.
+
+- **역할:** `mon_gmem0`(읽기 응답)과 `mon_gmem1`(쓰기 응답) 전 포트를 입력으로 받아 내부 `axi_response_error_observer`에 연결하고, `fault_now`를 `dfx_controller_0/vsm_VS_0_event_error`와 OR해 `safety_guard/event_error`로 전달한다.
+- **입출력:** 입력 `clk`, `rst_n`, `mon_gmem0_*`, `mon_gmem1_*`, `safe_reset_req`, `safe_reset_confirm`, `quiescent` / 출력 `read_fault`, `write_fault`, `fault_now`, `fault_hold`
+
+#### 10) `dfx_shell/icap_dfx_bridge.v` · 🟢 *v2 존재*
+
+DFX Controller와 Zynq UltraScale+ `ICAPE3` 프리미티브를 연결하는 정적 셸 브리지 RTL이다.
+
+- **역할:** DFX Controller 기준 포트명으로 `ICAPE3`를 인스턴스한다(`icap_o` → `ICAPE3.I`, `ICAPE3.O` → `icap_i`).
+- **입출력:** 입력 `icap_clk`, `icap_o[31:0]`, `icap_csib`, `icap_rdwrb` / 출력 `icap_i[31:0]`, `icap_avail`, `icap_prdone`, `icap_prerror`
 
 ---
 
@@ -478,7 +524,7 @@ flowchart LR
   - **RTL 테스트벤치 (🟢 v2 존재 — `checker/tb/`):**
     - `checker/tb/checker_hysteresis_tb.v`: Schmitt 밴드(인밴드 무변화), `pr_busy` ack까지 트리거 유지, 중복 트리거 방지, `DWELL_FRAMES=1` 억제 자가 검증 TB.
     - `checker/tb/checker_to_dfxc_tb.v`: `checker_hysteresis → dfxc_trigger_adapter → [PG374 계약 모델 BFM] → rm_ap_idle` 모델 연동 TB.
-    - `checker/tb/checker_ip_tb.v`: `checker_scan` 합성 RTL 포함 `checker_ip` 통합 TB(AXI-Lite 맵 + 버스트 DDR 읽기 모델).
+    - `checker/tb/checker_ip_tb.v`: `checker_scan` 합성 RTL 포함 `checker_ip` 통합 TB(AXI-Lite 맵 + 버스트 DDR 읽기 모델). 초기본 `checker_ip.v` 기준으로 AXI USER 와이어 5개를 선언하고 `dut(.*)`로 연결하므로 TF 최종본 `checker_ip.v`와의 포트 호환성은 `(확인 필요)`.
 
 ---
 
