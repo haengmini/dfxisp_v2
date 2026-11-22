@@ -2,16 +2,16 @@
 
 #include <cstdint>
 
-// 설계 근거·파이프라인 유도·상수 출처: docs/LowlightISP.md
+// 저조도용 ISP RM 구현 (상세: LowlightISP.md)
 
 namespace {
 
 constexpr int RAW12_MAX = 4095;
 
-constexpr int BLC_LEVEL12 = 1 << 4;   // 16 (2026-10-14, board-measured night optimum; was 32)
-constexpr int BLC_MUL_Q8 = 257;       // round(256 * 4095 / (4095 - 16))
+constexpr int BLC_LEVEL12 = 1 << 4;  // 16
+constexpr int BLC_MUL_Q8 = 257;
 
-constexpr int EXPOSURE_GAIN_Q8 = 512;
+constexpr int EXPOSURE_GAIN_Q8 = 512;  // 2.0x
 constexpr int WB_R_Q8 = 286, WB_G_Q8 = 256, WB_B_Q8 = 307;
 
 constexpr int CCM_Q8[3][3] = {
@@ -47,6 +47,7 @@ static inline uint32_t pack_rgb(uint8_t r, uint8_t g, uint8_t b) {
 
 static inline int bin_dim(int d) { return d / 2 < 1 ? 1 : d / 2; }
 
+// 단일 RGGB 셀 읽기
 static inline void cell_sites(const uint16_t* raw, int width, int height,
                               int cx, int cy, int& r, int& g0, int& g1, int& b) {
 #pragma HLS INLINE
@@ -60,6 +61,7 @@ static inline void cell_sites(const uint16_t* raw, int width, int height,
     b = raw[y1 * width + x1];
 }
 
+// 2x2 비닝·디모자이킹 결합
 static inline void binned_raw(const uint16_t* raw, int width, int height,
                               int bw, int bh, int bx, int by, int bin_mode,
                               int& r12, int& g12, int& b12) {
@@ -88,6 +90,7 @@ static inline void binned_raw(const uint16_t* raw, int width, int height,
     b12 = sum_b / 4;
 }
 
+// RGB 도메인 BLC + 노출 이득·고정 WB 결합
 static inline int correct_channel(int v, int wb_q8) {
 #pragma HLS INLINE
     v = v > BLC_LEVEL12 ? v - BLC_LEVEL12 : 0;
