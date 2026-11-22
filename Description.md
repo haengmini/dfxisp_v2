@@ -64,34 +64,46 @@
 시스템은 **PS·DDR4**, **PL 정적 영역(Static Region)**, **PL 재구성 영역(RP, Reconfigurable Partition)**의 3개 계층으로 분리된다.
 
 ```mermaid
+---
+config:
+  flowchart:
+    nodeSpacing: 26
+    rankSpacing: 26
+    padding: 12
+---
 flowchart LR
-    PS["PS (ARM) + DDR4\nRAW 입출력 / permit 부여"]
+    PS["PS · DDR4"]:::platform
 
-    subgraph PL_Static["PL 정적 영역 (Static Region)"]
-        CHK["Scene Checker\ndark_ratio 62%"]
-        HYST["Hysteresis RTL\n진입 64% / 이탈 60%"]
-        DFXC["AMD DFX Controller\nvs_hw_triggers"]
-        DPU["DPU\n객체 검출기"]
+    subgraph STATIC["PL 정적 영역"]
+        CHK["Scene Checker"]:::control
+        DFXC["DFX Controller"]:::control
+        DPU["DPU"]:::data
     end
 
-    subgraph PL_RP["PL 재구성 영역 (RP, 상호배타)"]
-        RM0["RM 0: NormalISP\n풀해상도 HxW"]
-        RM1["RM 1: LowlightISP\n2x2 비닝 H/2xW/2"]
+    subgraph RP["PL 재구성 영역 (RP)"]
+        ISP["NormalISP<br/>또는 LowlightISP"]:::data
     end
 
-    PS -->|"RAW12"| CHK
-    CHK -->|"hyst_flags (ap_vld)"| HYST
-    HYST -->|"전환 요청"| DFXC
-    PS -.->|"프레임 완료 후 permit"| DFXC
-    DFXC -->|"부분 재구성 (PR)"| PL_RP
-    PS -->|"RAW12"| PL_RP
-    PL_RP -->|"RGB32"| DPU
+    PS -->|RAW12| CHK
+    PS -->|RAW12| ISP
+    CHK -.-> DFXC
+    PS -.-> DFXC
+    DFXC -.-> ISP
+    ISP -->|RGB32| DPU
+
+    classDef platform fill:#e8edf4,stroke:#506079,color:#17243a
+    classDef data fill:#e3f4f0,stroke:#167568,color:#123c36
+    classDef control fill:#edeafb,stroke:#6552a3,color:#312358
+    style STATIC fill:transparent,stroke:#7789a4
+    style RP fill:transparent,stroke:#167568,stroke-width:2px
+    linkStyle default stroke-width:1.5px
 ```
 
-- **PS · DDR4:** RAW 프레임 입출력, 프레임 처리 완료 확인 후 전환 허가(`permit`/`commit`) 부여, 재구성 완료 관측 담당
-- **PL 정적 영역:** 장면 판정기(`checker_scan` + `checker_hysteresis.v`), AMD DFX Controller, 객체 검출용 DPU 상주
-  - RAW 도메인 어두운 화소 비율(`dark_ratio`, 중심 문턱값 `62%`)로 조도를 판정하고, 경계 떨림 방지를 위해 **진입 `64%` · 이탈 `60%`**의 Schmitt 히스테리시스 적용
-- **PL 재구성 영역(RP):** 두 재구성 모듈(RM) 중 하나만 상호배타적으로 탑재
+**그림 1. 조도 적응형 ISP의 DFX 아키텍처.** 실선은 영상 데이터 흐름, 점선은 판정·전환 제어 흐름을 나타낸다.
+
+- **PS · DDR4**는 RAW 프레임과 ISP 출력을 관리한다. 보드 실험에서는 PS가 DDR4의 RGB32 출력을 읽어 전처리한 뒤 DPU에 전달한다.
+- **PL 정적 영역**의 Scene Checker는 `checker_scan`과 히스테리시스 RTL로 구성된다. `checker_scan`은 어두운 화소 비율을 계산하고 `hyst_flags`를 `ap_vld`와 함께 RTL에 전달한다. 안정 모드가 바뀌면 전환 요청이 생성되고, PS가 전환을 승인하면 DFX Controller가 부분 재구성을 수행한다.
+- **PL 재구성 영역(RP)**에는 두 재구성 모듈(RM) 중 하나만 탑재된다.
   - **`NormalISP`** (<kbd>일반 조도</kbd>): AMD Vitis Vision L3 `isppipeline` 단계 순서를 따라 `BLC → Bayer 이득 제어 → 3×3 양선형 디모자이킹 → Gray-World AWB → 3×3 CCM → 감마 보정` 수행 (`H×W` RGB 출력)
   - **`LowlightISP`** (<kbd>저조도</kbd>): `2×2 RAW 비닝·디모자이킹 결합 → BLC → 노출 이득(2.0×)·고정 WB → 3×3 CCM → 감마 보정` 수행 (`H/2×W/2` RGB 출력)
 
@@ -102,33 +114,50 @@ flowchart LR
 
 ```mermaid
 stateDiagram-v2
+    direction LR
     [*] --> NORMAL
-    NORMAL --> LOW_LIGHT : dark_ratio > 64% (ABOVE_ENTER)
-    LOW_LIGHT --> NORMAL : dark_ratio < 60% (BELOW_EXIT)
-    NORMAL --> NORMAL : dark_ratio <= 64%
-    LOW_LIGHT --> LOW_LIGHT : dark_ratio >= 60%
+    NORMAL --> LOW_LIGHT : 64% 초과
+    LOW_LIGHT --> NORMAL : 60% 미만
 ```
+
+**그림 2. Scene Checker의 Schmitt 히스테리시스.** 어두운 화소 비율이 64%를 초과하면 저조도 모드로 진입하고(`ABOVE_ENTER`), 60% 미만이면 일반 조도 모드로 돌아간다(`BELOW_EXIT`). 중심 문턱값은 62%이며, 60%와 64%를 포함한 구간에서는 현재 모드를 유지한다. 리셋 시 초기 모드는 `NORMAL`이다.
 
 #### PL 하드웨어 트리거 · PS 안전 허가(permit) 협조 시퀀스
 
 ```mermaid
+---
+config:
+  themeCSS: ".actor-line { stroke-width: 1px; opacity: 0.45; }"
+  sequence:
+    width: 108
+    height: 42
+    actorMargin: 32
+    messageMargin: 16
+    mirrorActors: false
+---
 sequenceDiagram
-    participant PS as PS (ARM / controller.py)
-    participant CHK as checker_scan (PL)
-    participant HYST as checker_hysteresis.v (PL)
-    participant DFXC as AMD DFX Controller (PL)
-    participant RP as ISP RP (Normal / Lowlight)
-    participant DPU as DPU (PL)
+    participant PS
+    participant CHK as Scene Checker
+    participant DFX as DFX 제어
+    participant RP as ISP RP
+    participant DPU
 
-    PS->>CHK: RAW12 프레임 전달
-    CHK->>HYST: hyst_flags (ap_vld)
-    HYST->>DFXC: vs_hw_triggers (전환 요청)
-    PS->>DFXC: 프레임 완료 확인 후 permit / commit 부여
-    DFXC->>RP: 부분 재구성 (PR) 수행
-    DFXC-->>PS: 재구성 완료 관측
-    PS->>RP: RAW12 프레임 처리
-    RP->>DPU: RGB32 전달 및 객체 검출
+    PS->>DFX: permit
+    PS->>CHK: 조도 판정
+    alt 모드 전환
+        CHK->>DFX: 전환 요청
+        PS->>DFX: commit
+        DFX->>RP: 부분 재구성
+        DFX-->>PS: 완료 상태
+    else 모드 유지
+        PS->>DFX: cancel
+    end
+    PS->>RP: ISP 실행
+    RP-->>PS: RGB32
+    PS->>DPU: 검출 실행
 ```
+
+**그림 3. 프레임 사이의 RM 전환과 ISP 실행.** PS의 `controller.py`는 직전 프레임이 끝나고 ISP가 유휴 상태임을 확인한 뒤 `permit`을 설정하고 조도 판정을 시작한다. 전환 요청이 생기면 PS가 대상 RM을 확인하고 `commit`을 보낸다. DFX 제어 블록은 안전 게이트와 DFX Controller를 묶어 나타내며, 승인된 요청은 `vs_hw_triggers`를 통해 부분 재구성을 시작한다. PS는 재구성이 끝나거나 전환 요청 없이 판정이 끝나면 `permit`을 해제하고 ISP를 실행한다.
 
 </details>
 
@@ -161,19 +190,27 @@ sequenceDiagram
 ## 연구 흐름
 
 ```mermaid
+---
+config:
+  flowchart:
+    rankSpacing: 26
+    padding: 12
+---
 flowchart LR
-    S1["1. 문제 설정\n아키텍처 정의\n(2026.07)"]
-    S2["2. SW 트랙\nStage 0~3\n(2026.07~08)"]
-    S3["3. HW 트랙\nStage 4~5\n(2026.07~08)"]
-    S4["4. 보드 통합·실측\nZCU104\n(2026.09~10)"]
-    S5["5. 재현·후속·정리\nv2 이관\n(2026.11~)"]
+    S1["문제 설정"]:::milestone
+    S2["SW 검증"]:::iteration
+    S3["HW 구현"]:::iteration
+    S4["보드 실측"]:::milestone
+    S5["재현 검증"]:::milestone
 
     S1 --> S2 --> S3 --> S4 --> S5
-    S3 -.->|"나선형 되먹임\n(알고리즘·상수 재검증)"| S2
+    S3 -.-> S2
+
+    classDef milestone fill:#e8edf4,stroke:#506079,color:#17243a
+    classDef iteration fill:#edeafb,stroke:#6552a3,color:#312358
 ```
 
-> [!NOTE]
-> 전체 진행은 단순 선형이 아니라, 하드웨어 구현이나 실센서 RAW 검증에서 새로운 사실이 드러날 때마다 **SW Stage 3으로 되돌아와 알고리즘·상수를 재검증한 뒤 다시 HW에 반영하는 나선형(spiral) 흐름**을 따랐다.[^3]
+**그림 4. 연구 단계와 SW·HW 반복 검증.** 점선은 HW 구현이나 실센서 RAW 검증에서 얻은 결과를 바탕으로 SW Stage 3에서 알고리즘·상수를 재검증하고, 그 결과를 HW에 다시 반영한 과정을 나타낸다.[^3]
 
 1. **문제 설정 및 아키텍처 정의 (`2026.07`)**  
    저조도 객체 검출 성능 저하를 SNR 문제와 ISP 구조 차이(풀해상도 vs 2×2 비닝·고이득)로 정식화했다. 정적 영역에는 제어·판정·DFX 컨트롤러만 두고, 단일 RP에 `NormalISP`와 `LowlightISP` 전체 파이프라인을 상호배타적으로 교체하는 아키텍처를 정본 구조로 확정했다.[^4]
@@ -198,17 +235,17 @@ flowchart LR
 dfxisp_v2/
 ├── NormalISP/
 │   ├── NormalISP.hpp               # 🟢 v2 존재 (RP 공통 포트 계약)
-│   └── NormalISP.cpp               # 🟢 v2 존재 (정본과 바이트 동일)
+│   └── NormalISP.cpp               # 🟢 v2 존재
 ├── LowlightISP/
 │   ├── LowlightISP.hpp             # 🟢 v2 존재 (RP 공통 포트 계약)
-│   └── LowlightISP.cpp             # 🟢 v2 존재 (정본과 바이트 동일)
+│   └── LowlightISP.cpp             # 🟢 v2 존재
 ├── vectors/
 │   ├── NormalISP_vectors.csv       # 🟢 v2 존재 (10 cases, RAW 528 / RGB 528)
 │   └── LowlightISP_vectors.csv     # 🟢 v2 존재 (11 cases, RAW 592 / RGB 147)
 ├── checker/                        # 🟢 v2 존재 (HLS 코어 + RTL 3종 + RTL TB 3종 + README)
-│   ├── checker.hpp / checker.cpp   # 🟢 v2 존재 (정본과 바이트 동일)
-│   ├── checker_hysteresis.v        # 🟢 v2 존재 (정본과 바이트 동일)
-│   ├── dfxc_trigger_adapter.v      # 🟢 v2 존재 (정본과 바이트 동일)
+│   ├── checker.hpp / checker.cpp   # 🟢 v2 존재
+│   ├── checker_hysteresis.v        # 🟢 v2 존재
+│   ├── dfxc_trigger_adapter.v      # 🟢 v2 존재
 │   ├── checker_ip.v                # 🟢 v2 존재 (pr_latency_probe 의존성 있음)
 │   ├── README.md                   # 🟢 v2 존재
 │   └── tb/                         # 🟢 v2 존재 (RTL 테스트벤치 3종)
@@ -224,7 +261,7 @@ dfxisp_v2/
 
 > **연구 흐름 위치:** 1단계 — 장면 조도 판정 + DFX 전환 트리거 생성 (정적 영역)
 
-#### 1) `checker/checker.hpp` · 🟢 *v2 존재 (`dfxisp_essen/checker/checker.hpp`와 바이트 동일)*
+#### 1) `checker/checker.hpp` · 🟢 *v2 존재*
 
 정적 영역 장면 판정기의 핵심 로직 헤더로, 외부 헤더 의존성 없이 열거형을 인라인 정의한다.
 
@@ -245,7 +282,7 @@ $$\text{dark} \times 100 > 64 \cdot N \;\Rightarrow\; \texttt{ABOVE\_ENTER}, \qq
 
 </details>
 
-#### 2) `checker/checker.cpp` · 🟢 *v2 존재 (`dfxisp_essen/checker/checker.cpp` 및 `hls/src/checker.cpp`와 바이트 동일)*
+#### 2) `checker/checker.cpp` · 🟢 *v2 존재*
 
 정적 영역 장면 판정기의 HLS 합성 최상위 함수 `checker_scan` 래퍼다. `!raw_bayer || width <= 0 || height <= 0` 가드 시 `selected_mode=NORMAL`, `hyst_flags=BELOW_EXIT`, `dark_count=0`을 즉시 반환한다.
 
@@ -266,14 +303,14 @@ extern "C" void checker_scan(
 
 </details>
 
-#### 3) `checker/checker_hysteresis.v` · 🟢 *v2 존재 (`dfxisp_essen/hls/checker/checker_hysteresis.v`와 바이트 동일)*
+#### 3) `checker/checker_hysteresis.v` · 🟢 *v2 존재*
 
 정적 영역 Schmitt 히스테리시스 모드 중재기 및 PR 트리거 생성 RTL 모듈이다.
 
 - **역할:** `checker_scan`의 `hyst_flags`(`above_enter`, `below_exit`)와 `flags_vld` 펄스를 받아 안정 모드(`mode`, 리셋 시 `0=NORMAL`)를 유지하고, 모드 전환 시 `pr_trigger`를 올려 `pr_busy` ack 수신 즉시 해제한다. 요청 대기 또는 재구성 중(`pr_trigger || pr_busy`)에는 판정을 동결하며, 전환 직후 `DWELL_FRAMES` 동안 재전환을 억제한다.
 - **파라미터 및 입출력:** 파라미터 `DWELL_FRAMES=1`(기본값, 카운터 폭 `DWELL_W` 자동 계산) / 입력 `clk`, `rst_n`, `flags_vld`, `above_enter`, `below_exit`, `pr_busy` / 출력 `pr_trigger`, `mode`
 
-#### 4) `checker/dfxc_trigger_adapter.v` · 🟢 *v2 존재 (`dfxisp_essen/hls/checker/dfxc_trigger_adapter.v`와 바이트 동일)*
+#### 4) `checker/dfxc_trigger_adapter.v` · 🟢 *v2 존재*
 
 `checker_hysteresis.v`와 AMD DFX Controller IP(PG374) 사이를 연결하는 어댑터 RTL 모듈이다.
 
@@ -281,7 +318,7 @@ extern "C" void checker_scan(
 - **입출력:** 입력 `clk`, `rst_n`, `mode`, `pr_trigger`, `vs_rm_shutdown_req`, `vs_rm_decouple`, `rm_ap_idle` / 출력 `pr_busy`, `vs_hw_triggers[1:0]`, `vs_rm_shutdown_ack`
 - **비고:** 통합 BD에서 `rm_ap_idle` 핀의 실제 연결 및 PS(`controller.py`) `permit`/`commit`과의 연동 관계는 `checker/README.md` 참조 `(확인 필요)`.
 
-#### 5) `checker/checker_ip.v` · 🟢 *v2 존재 (`dfxisp_essen/hls/checker/checker_ip.v`와 바이트 동일)*
+#### 5) `checker/checker_ip.v` · 🟢 *v2 존재*
 
 `checker_scan`, `checker_hysteresis`, `dfxc_trigger_adapter` 및 `pr_latency_probe`를 묶는 정적 영역 통합 래퍼 RTL이다.
 
@@ -306,20 +343,27 @@ extern "C" void NormalISP(
 
 - **추가 선언:** 열거형 `NormalISPAwbMode` (<kbd>NORMAL_ISP_AWB_OFF=0</kbd>, <kbd>NORMAL_ISP_AWB_ON=1</kbd>), 개발·분석용 `NormalISP_dev(..., int awb_mode, int* out_width, int* out_height)`
 
-#### `NormalISP/NormalISP.cpp` · 🟢 *v2 존재 (`dfxisp_essen/NormalISP/NormalISP.cpp`와 바이트 동일)*
+#### `NormalISP/NormalISP.cpp` · 🟢 *v2 존재*
 
 일반 조도용 ISP RM의 정수 연산 HLS 구현(`run_normal_isp`)이다. 최상위 `NormalISP`는 <kbd>AWB_ON</kbd> 고정이며 입력 해상도($H \times W$)를 보존한다.
 
-```text
-RAW12 (RGGB)
-  → ① Bayer BLC (level=32, *258>>8)
-  → ② Bayer 위치별 이득 (R=286, G=256, B=307, Q8)
-  → ③ 3×3 양선형 디모자이킹 (12-bit 유지)
-  → ④ Gray-World AWB (1차 스캔 평균, [64, 1024] 클램프)
-  → ⑤ 3×3 CCM (음수 0 바닥처리 후 >>8)
-  → ⑥ 12→8-bit (>>4) + 감마 2.0 LUT[256]
-  → ⑦ RGB32 (0x00RRGGBB, H×W)
+```mermaid
+---
+config:
+  flowchart:
+    rankSpacing: 18
+    padding: 10
+---
+flowchart LR
+    RAW["RAW12"] --> BLC["BLC"] --> GAIN["Bayer 이득"] --> DEMO["디모자이킹"]
+    DEMO --> AWB["AWB"] --> CCM["CCM"] --> GAMMA["감마"] --> RGB["RGB32"]
+
+    classDef io fill:#e3f4f0,stroke:#167568,color:#123c36
+    classDef default fill:#e8edf4,stroke:#506079,color:#17243a
+    class RAW,RGB io
 ```
+
+**그림 5. NormalISP 처리 흐름.** RGGB 입력에 Bayer BLC(레벨 32, `*258 >> 8`)와 위치별 Q8 이득(R=286, G=256, B=307)을 적용한다. 3×3 양선형 디모자이킹 후 Gray-World AWB 이득을 적용한다. 3×3 CCM의 음수 결과는 0으로 제한한 뒤 `>> 8`로 스케일을 복원한다. 12비트 값을 `>> 4`로 8비트로 변환해 감마 2.0 LUT를 적용하고, 원본 해상도의 RGB32(`0x00RRGGBB`)를 출력한다.
 
 - **핵심 연산식:** BLC 복원 $\text{clip}(\lfloor(\max(v-32,0)\cdot 258)/256\rfloor, 0, 4095)$, 감마 LUT $\gamma(v_8) = \lfloor\sqrt{255 \cdot v_8}\rfloor$
 
@@ -352,18 +396,27 @@ extern "C" void LowlightISP(
 
 - **추가 선언:** 열거형 `LowlightISPBinning` (<kbd>LOWLIGHT_ISP_BIN_SUBSAMPLE=0</kbd>, <kbd>LOWLIGHT_ISP_BIN_BINNING=1</kbd>), 개발·분석용 `LowlightISP_dev(..., int bin_mode, int* out_width, int* out_height)`
 
-#### `LowlightISP/LowlightISP.cpp` · 🟢 *v2 존재 (`dfxisp_essen/LowlightISP/LowlightISP.cpp`와 바이트 동일)*
+#### `LowlightISP/LowlightISP.cpp` · 🟢 *v2 존재*
 
 저조도용 ISP RM의 정수 연산 HLS 구현(`run_lowlight_isp`)이다. 최상위 `LowlightISP`는 <kbd>BINNING</kbd> 고정이며 출력 해상도는 절반으로 축소된다.
 
-```text
-RAW12 (RGGB)
-  → ① 2×2 비닝·디모자이킹 결합 (R=sum_r/4, G=sum_g/8, B=sum_b/4)
-  → ② RGB 도메인 BLC (level=16, *257>>8) + 노출 이득(2.0×)·고정 WB 결합
-  → ③ 3×3 CCM (음수 0 바닥처리 후 >>8)
-  → ④ 12→8-bit (>>4) + 감마 2.0 LUT[256]
-  → ⑤ RGB32 (0x00RRGGBB, H/2×W/2)
+```mermaid
+---
+config:
+  flowchart:
+    rankSpacing: 18
+    padding: 10
+---
+flowchart LR
+    RAW["RAW12"] --> BIN["2×2 비닝<br/>디모자이킹"] --> GAIN["BLC · 이득<br/>고정 WB"]
+    GAIN --> CCM["CCM"] --> GAMMA["감마"] --> RGB["RGB32"]
+
+    classDef io fill:#e3f4f0,stroke:#167568,color:#123c36
+    classDef default fill:#e8edf4,stroke:#506079,color:#17243a
+    class RAW,RGB io
 ```
+
+**그림 6. LowlightISP 처리 흐름.** RGGB 입력은 2×2 비닝·디모자이킹에서 같은 색끼리 평균한다. RGB 도메인 BLC(레벨 16, `*257 >> 8`)를 적용한 뒤 노출 이득(2.0×)과 고정 WB를 곱한다. 3×3 CCM과 8비트 변환(`>> 4`), 감마 2.0 LUT를 거쳐 가로·세로가 절반인 RGB32(`0x00RRGGBB`)를 출력한다.
 
 - **핵심 연산식:** 출력 해상도 $W_{\text{out}} = \max(1, \lfloor W/2 \rfloor),\; H_{\text{out}} = \max(1, \lfloor H/2 \rfloor)$, BLC 복원 $\text{clip}(\lfloor(\max(v-16,0)\cdot 257)/256\rfloor, 0, 4095)$
 
@@ -374,7 +427,7 @@ RAW12 (RGGB)
   - 비닝·디모자이킹: `BINNING(1)`은 2×2 인접 RGGB 셀 경계 클램프 후 동일 색 평균(`R=sum_r/4`, `G=sum_g/8`, `B=sum_b/4`), `SUBSAMPLE(0)`은 단일 RGGB 셀(`R=r`, `G=(g0+g1)/2`, `B=b`)
   - 이득 및 WB: `gain_q8=(512*wb_q8)>>8`, `[0, 4095]` 클램프(적응형 AWB 없음)
   - 가드: null 또는 비양수 크기 입력 시 `out_width=out_height=0` 반환
-- **핵심 상수:** `RAW12_MAX=4095`, `BLC_LEVEL12=16`(`1<<4`), `BLC_MUL_Q8=257`, `EXPOSURE_GAIN_Q8=512`(2.0×), `WB_R_Q8=286`, `WB_G_Q8=256`, `WB_B_Q8=307`, `CCM_Q8={{288,-24,-8},{-24,296,-16},{-16,-32,304}}`, `GAMMA2_LUT[256]`(`NormalISP.cpp`와 바이트 동일, `0..255`), 내측 루프 `#pragma HLS PIPELINE II=1`, `LOOP_TRIPCOUNT` y `1..540` / x `2..960`
+- **핵심 상수:** `RAW12_MAX=4095`, `BLC_LEVEL12=16`(`1<<4`), `BLC_MUL_Q8=257`, `EXPOSURE_GAIN_Q8=512`(2.0×), `WB_R_Q8=286`, `WB_G_Q8=256`, `WB_B_Q8=307`, `CCM_Q8={{288,-24,-8},{-24,296,-16},{-16,-32,304}}`, `GAMMA2_LUT[256]`(`0..255`), 내측 루프 `#pragma HLS PIPELINE II=1`, `LOOP_TRIPCOUNT` y `1..540` / x `2..960`
 - **HLS 인터페이스:** `raw_bayer`(`m_axi gmem0`, `depth=2048`) → `rgb_out`(`m_axi gmem1`, `depth=2048`), 스칼라 입출력 및 `return`은 `s_axilite control`
 
 </details>
@@ -385,7 +438,7 @@ RAW12 (RGGB)
 
 독립 Python 구현에서 생성해 고정한 비트 단위 회귀 검증 픽스처다.
 
-- **`vectors/NormalISP_vectors.csv`** · 🟢 *v2 존재 (`dfxisp_essen/hls/tests/default_isp_golden_vectors.csv`와 바이트 동일)*  
+- **`vectors/NormalISP_vectors.csv`** · 🟢 *v2 존재*  
   **10개 케이스** · 입력 RAW **528화소** / 기대 RGB(`0x00RRGGBB`) **528화소** (해상도 보존, `awb_mode` 0/1 포함)
   <details>
   <summary>열 구조 및 케이스 상세</summary>
@@ -395,7 +448,7 @@ RAW12 (RGGB)
 
   </details>
 
-- **`vectors/LowlightISP_vectors.csv`** · 🟢 *v2 존재 (`dfxisp_essen/hls/tests/lowlight_isp_golden_vectors.csv`와 바이트 동일)*  
+- **`vectors/LowlightISP_vectors.csv`** · 🟢 *v2 존재*  
   `BLC=16` 반영본 · **11개 케이스** · 입력 RAW **592화소** / 기대 RGB(`0x00RRGGBB`) **147화소** (절반 해상도, `bin_mode` 0/1 포함)
   <details>
   <summary>열 구조 및 케이스 상세</summary>
@@ -422,7 +475,7 @@ RAW12 (RGGB)
 
 - **`checker` C-sim 테스트 및 RTL 테스트벤치**
   - **C-sim (🟡 v2 미복사 — v2 편입 및 골든 어서션 테스트 유무 `(확인 필요)`):** `dfxisp_essen/hls/results/tools/checker_hls_tb.cpp`(+ `checker_hls_csim_tb.cpp`)는 매니페스트 CSV(`raw_path,width,height,stem,source`)로 실제 RAW 바이너리 파일을 읽어 `checker_scan(..., DFXISP_MODE_AUTO, 4096, 62, 64, 60, ...)`의 `dark_count`, `hyst_flags`, `selected_mode`를 CSV로 출력하는 배치 실행 하네스다. 여기 전달되는 `4096`은 배치 하네스 전용 값이며 보드 실운용 값(`256`)이 아니다. 고정 골든 벡터 대조 어서션 테스트는 `dfxisp_essen`에서 확인되지 않음 `(확인 필요)`.
-  - **RTL 테스트벤치 (🟢 v2 존재 — `checker/tb/`, 정본과 바이트 동일):**
+  - **RTL 테스트벤치 (🟢 v2 존재 — `checker/tb/`):**
     - `checker/tb/checker_hysteresis_tb.v`: Schmitt 밴드(인밴드 무변화), `pr_busy` ack까지 트리거 유지, 중복 트리거 방지, `DWELL_FRAMES=1` 억제 자가 검증 TB.
     - `checker/tb/checker_to_dfxc_tb.v`: `checker_hysteresis → dfxc_trigger_adapter → [PG374 계약 모델 BFM] → rm_ap_idle` 모델 연동 TB.
     - `checker/tb/checker_ip_tb.v`: `checker_scan` 합성 RTL 포함 `checker_ip` 통합 TB(AXI-Lite 맵 + 버스트 DDR 읽기 모델).
