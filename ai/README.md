@@ -55,3 +55,4 @@ V2 스크립트는 정본 `2026-10-v2-board/scripts/audit/{quant_v2,export_seed,
 | `models/reference/v2live/v2_yolo_A_s0.xmodel` | 보드 SD /home/root/exp/v2live (백업본) | 4325149 | `4565206dc2dbd03a8fcc312a558e5b4bd1763dbf87b26e8ec1f4b7952f202357` |
 | `models/reference/yolov8n_dpu.xmodel` | 정본 hw/ai/models/yolov8n/ | 4481264 | `6713fbad2065a6b15e627b334633912c24cf691748455b9c7b82f8f269698817` |
 | `models/yolov8n.pt` | 정본 hw/ai/models/yolov8n/ | 6243178 | `5d32e97ce3fafe16381e2e18c6da78e8c5019035d91291b5b90f50d26c63f848` |
+| `models/rebuilt/yolov8n_dpu_v2rebuild.xmodel` | S4 컴파일 산출물 | 4327213 | `a81d5331a1d0403f5cf019bdc119919bb40b38307f9e768ce6e8d9e969abd858` |
