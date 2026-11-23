@@ -5,3 +5,5 @@
 /ai/data/demo/images/
 /ai/data/demo/labels/
 /ai/results/**/annotated/
+
+/ai/scripts/__pycache__/

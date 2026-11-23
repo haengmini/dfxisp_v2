@@ -1,11 +1,15 @@
 [info] DPU input (1, 640, 640, 3), in_scale=64.0, outputs=[(1, 80, 80, 64), (1, 40, 40, 64), (1, 20, 20, 64), (1, 80, 80, 3), (1, 40, 40, 3), (1, 20, 20, 3)]
 
-[timing over 6 images] pre 64.6 ms | DPU 65.4 ms | post 78.3 ms | total 208.3 ms = 4.8 FPS (excl. image load)
+[timing over 10 images] pre 64.4 ms | DPU 66.1 ms | post 78.2 ms | total 208.8 ms = 4.8 FPS (excl. image load)
 [info] wrote results/rebuild/detections.json
 2014_000888.jpg: 1 dets  [car:0.97]
 2014_001610.jpg: 4 dets  [person:0.92, person:0.88, person:0.82, person:0.82]
 2014_002785.jpg: 2 dets  [bicycle:0.95, person:0.92]
+2014_003044.jpg: 3 dets  [person:0.92, bicycle:0.92, person:0.38]
+2014_004106.jpg: 2 dets  [bicycle:0.97, person:0.92]
 DSC01845.jpg: 9 dets  [bicycle:0.95, person:0.92, bicycle:0.92, person:0.82, person:0.82]
 DSC02077.jpg: 13 dets  [person:0.92, person:0.88, person:0.88, person:0.88, person:0.88]
 DSC02790.jpg: 3 dets  [car:0.97, person:0.88, bicycle:0.73]
-BOARD_RUN exit=0 wall_s=4.000
+DSC02903.jpg: 16 dets  [car:0.95, person:0.82, person:0.82, person:0.82, person:0.73]
+DSC03927.jpg: 7 dets  [car:0.92, person:0.88, bicycle:0.88, person:0.82, person:0.73]
+BOARD_RUN exit=0 wall_s=4.688

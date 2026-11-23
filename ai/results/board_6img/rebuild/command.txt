@@ -1,0 +1,1 @@
+python3 run_detector.py --model yolov8n --xmodel yolov8n_dpu_v2rebuild.xmodel --images images --out results/rebuild/detections.json --norm unit --conf 0.25 --iou 0.45 --warmup 3

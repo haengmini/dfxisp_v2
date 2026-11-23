@@ -651,7 +651,7 @@ Vivado 2024.1(`xczu7ev-ffvc1156-2-e`, PL0 100 MHz)에서 DPU와 DPU 전용 클�
 ai/                                  🟢
 ├── models/                          🟢 학습된 입력과 보관 DPU 모델
 ├── arch/                            🟢 DPU 지문 설정
-├── data/                            🟢 데모 6장 목록(`demo_list.txt`)과 보정 목록. 원본 이미지·라벨은 라이선스 때문에 미포함
+├── data/                            🟢 4장 테스트 10장 목록(`demo_list.txt`)과 보정 목록. 원본 이미지·라벨은 라이선스 때문에 미포함
 ├── board/run_detector.py             🟢 VART 실행과 numpy 후처리
 ├── scripts/                         🟢 재구축·검증·배포 스크립트
 ├── results/                         🟢 검출 JSON, 구조 및 검출 대조(주석 이미지는 로컬 재생성, 미포함)
@@ -668,15 +668,15 @@ ai/                                  🟢
 
 ### 3.3 양자화와 컴파일 재구축
 
-Vitis AI 3.5 CPU 컨테이너에서 체크포인트의 `state_dict` 355키를 이관해 분류 head를 복원했다. 데모 6장을 제외한 LOD·PASCAL 참조 JPG 128장으로 PTQ를 수행한 뒤 batch 1 xmodel을 내보내고 B4096에 컴파일했다. 최종 xmodel의 DPU 서브그래프는 1개이고 지문은 `0x101000056010407`이다. 호스트 데모 검출 수는 SiLU FP32 25건, Hardswish FP32 34건, Hardswish INT8 32건이다. 10월 보정에는 학습 분할의 ISP 출력 PNG를 사용했다. [실행 결과](ai/RESULTS.md)
+Vitis AI 3.5 CPU 컨테이너에서 체크포인트의 `state_dict` 355키를 이관해 분류 head를 복원했다. 재구축 당시 최초 데모 6장을 제외한 LOD·PASCAL 참조 JPG 128장으로 PTQ를 수행한 뒤 batch 1 xmodel을 내보내고 B4096에 컴파일했다. 최종 xmodel의 DPU 서브그래프는 1개이고 지문은 `0x101000056010407`이다. 4장 호스트 10장 검출 수는 SiLU FP32 44건, Hardswish FP32 62건, Hardswish INT8 60건이다. 10월 보정에는 학습 분할의 ISP 출력 PNG를 사용했다. [실행 결과](ai/RESULTS.md)
 
 ### 3.4 보드 DPU 추론 확인
 
-고정 JPG는 PASCAL의 `2014_000888`, `2014_001610`, `2014_002785`와 LOD의 `DSC01845`, `DSC02077`, `DSC02790`이다. 재구축 모델, reference, v2live 3개가 모두 보드에서 6장을 처리했다. 재구축 모델은 32건을 검출했고 그중 27건이 같은 클래스·IoU 0.5 이상으로 GT에 대응했다. 32건 모두 호스트 INT8 검출과 대응했다. 재구축 모델의 첫 DPU 서브그래프 호출은 평균 65.4 ms/장, JPG 로드를 제외한 전체 처리는 208.3 ms/장이었다. [실행 결과](ai/RESULTS.md) · [보드 재생 절차](ai/BOARD_RUN.md)
+정본 `dataset/test`의 PASCAL 5장과 LOD 5장을 재구축 모델, reference, v2live 3개로 각각 처리했다. 재구축 모델의 검출 60건이 호스트 INT8과 모두 대응했고, 45건이 같은 클래스·IoU 0.5 이상으로 GT에 대응했다. 재구축 모델의 첫 DPU 서브그래프 호출은 평균 66.1 ms/장, JPG 로드를 제외한 처리는 208.8 ms/장이었다. `2014_003044`, `DSC03927`은 기존 보정 목록에도 포함된다. 4장 결과는 정확도 평가가 아닌 DPU 동작 확인용이다. [실행 결과](ai/RESULTS.md) · [보드 재생 절차](ai/BOARD_RUN.md)
 
 ### 3.5 DPU IP 설정
 
-TF의 `dpuczdx8g_0`은 B4096·URAM 구성으로, 보드 조회에서 지문 `0x101000056010407`, 300 MHz, 1코어, Vivado 플로우를 확인했다. TF의 DPU 제어 주소는 `0xA1000000`이다. 명령 AXI는 HPC0, 두 데이터 AXI는 HP1·HP2를 사용한다. 클럭 위저드의 첫 출력은 600 MHz, 두 번째는 300 MHz다. [TF BD·XCI 키와 9월 계획 대조](ai/DPU_CONFIG.md)
+TF의 `dpuczdx8g_0`은 B4096·URAM 구성으로, 보드 조회에서 지문 `0x101000056010407`, 300 MHz, 1코어, Vivado 플로우를 확인했다. TF의 DPU 제어 주소는 `0xA1000000`이다. 명령 AXI는 HPC0, 두 데이터 AXI는 HP1·HP2를 사용한다. 클럭 위저드의 첫 출력은 600 MHz, 두 번째는 300 MHz다. [DPU 연결과 보드 확인](ai/DPU_CONNECTION.md) · [TF BD·XCI 키와 9월 계획 대조](ai/DPU_CONFIG.md)
 
 ### 3.6 10월 실험에서의 모델 역할
 
@@ -684,7 +684,7 @@ TF의 `dpuczdx8g_0`은 B4096·URAM 구성으로, 보드 조회에서 지문 `0x1
 
 ### 3.7 한계와 미확인 항목
 
-보관 FP32 모델은 SiLU를 사용했고, 이번 양자화에서는 SiLU를 Hardswish로 치환했다. 재구축 보정 자료는 10월 ISP 학습 PNG와 출처가 다르다. 고정 JPG 6장으로는 검출 일반화나 ISP별 정확도를 판단할 수 없다. 10월 학습의 재현과 보드 부팅 비트스트림의 TF 빌드 계보는 (확인 필요).
+보관 FP32 모델은 SiLU를 사용했고, 이번 양자화에서는 SiLU를 Hardswish로 치환했다. 재구축 보정 자료는 10월 ISP 학습 PNG와 출처가 다르다. 보정 목록과 겹치는 2장을 포함한 고정 JPG 10장으로는 검출 일반화나 ISP별 정확도를 판단할 수 없다. 10월 학습의 재현과 보드 부팅 비트스트림의 TF 빌드 계보는 (확인 필요).
 
 ---
 

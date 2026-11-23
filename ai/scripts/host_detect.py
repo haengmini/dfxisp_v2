@@ -4,10 +4,11 @@ import time
 
 import torch
 
+from demo_inputs import demo_images
 from quant import AI, WORK, RawHead, detector, input_tensor, quantizer
 
 
-def validate_silu_head(model):
+def validate_silu_head(model, paths):
     from ultralytics import YOLO
 
     checkpoint = YOLO(str(AI / "models/yolov8n.pt")).model.float().eval()
@@ -23,7 +24,6 @@ def validate_silu_head(model):
              for j, branch in enumerate((detector_head.cv2, detector_head.cv3))
              for i in range(detector_head.nl)]
     maximum = 0.0
-    paths = sorted((AI / "data/demo/images").glob("*.jpg"))
     with torch.no_grad():
         for path in paths:
             data = input_tensor(detector.load_rgb(str(path)))
@@ -36,13 +36,13 @@ def validate_silu_head(model):
     assert maximum <= 1e-5, maximum
 
 
-def detect(model, name):
+def detect(model, name, paths):
     directory = WORK / "host" / name
     directory.mkdir(parents=True, exist_ok=True)
     images = {}
     start = time.monotonic()
     with torch.no_grad():
-        for path in sorted((AI / "data/demo/images").glob("*.jpg")):
+        for path in paths:
             rgb = detector.load_rgb(str(path))
             height, width = rgb.shape[:2]
             raw = model(input_tensor(rgb))
@@ -64,9 +64,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--fp32-only", action="store_true")
     args = parser.parse_args()
+    paths = demo_images(AI / "data/demo")
     silu = RawHead(hardswish=False).eval()
-    validate_silu_head(silu)
-    detect(silu, "silu_fp32")
-    detect(RawHead().eval(), "hardswish_fp32")
+    validate_silu_head(silu, paths)
+    detect(silu, "silu_fp32", paths)
+    detect(RawHead().eval(), "hardswish_fp32", paths)
     if not args.fp32_only:
-        detect(quantizer("test").quant_model.eval(), "hardswish_int8")
+        detect(quantizer("test").quant_model.eval(), "hardswish_int8", paths)

@@ -1,9 +1,12 @@
+import argparse
 from itertools import combinations
 import json
 from pathlib import Path
 from statistics import mean
 
 from PIL import Image, ImageDraw, ImageFont
+
+from demo_inputs import demo_images
 
 AI = Path(__file__).resolve().parents[1]
 RESULTS = AI / "results"
@@ -98,7 +101,11 @@ def summarize(items, n_a, n_b):
 
 
 def main():
-    files = sorted((DEMO / "images").glob("*.jpg"))
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--annotate", action="store_true", help="generate ignored local JPG previews")
+    args = parser.parse_args()
+    files = demo_images(DEMO)
+    calibration = {Path(entry).stem for entry in (AI / "data/calib_list.txt").read_text().splitlines()}
     names = [p.name for p in files]
     sets = {}
     for group, models in (("host", HOSTS), ("board", BOARDS)):
@@ -109,17 +116,18 @@ def main():
                 print("MISSING", group, model)
                 continue
             payload = json.loads(record.read_text())
-            assert sorted(payload["images"]) == names
+            assert set(payload["images"]) == set(names)
             assert payload["classes"] == list(CLASSES) and payload["conf"] == 0.25 and payload["iou"] == 0.45
             sets[model] = payload["images"]
-            for path in files:
-                annotate(path, directory / "annotated", sets[model][path.name]["detections"])
+            if args.annotate:
+                for path in files:
+                    annotate(path, directory / "annotated", sets[model][path.name]["detections"])
 
     counts = {}
     for name in names:
         with Image.open(DEMO / "images" / name) as img:
             gt = ground_truth(DEMO / "labels" / (Path(name).stem + ".txt"), *img.size)
-        row = {"gt": len(gt)}
+        row = {"gt": len(gt), "in_calibration": Path(name).stem in calibration}
         for model, images in sets.items():
             boxes = images[name]["detections"]
             row[model] = {"count": len(boxes), "gt_matches": len(matches(boxes, gt))}
@@ -137,12 +145,17 @@ def main():
                                 sum(x["n_b"] for x in by_image.values()))})
     (RESULTS / "comparison.json").write_text(json.dumps(
         {"images": counts, "pairs": pairs}, indent=2) + "\n")
-    columns = ["파일", "GT", *sets]
+    columns = ["파일", "보정 목록에도 포함", "GT", *sets]
     rows = [columns, ["---"] * len(columns)]
     for name, values in counts.items():
-        rows.append([name, str(values["gt"]), *(
+        rows.append([name, "예" if values["in_calibration"] else "—", str(values["gt"]), *(
             f"{values[m]['count']} / {values[m]['gt_matches']}" for m in sets)])
-    header = "각 셀은 검출 수 / 같은 클래스·IoU ≥ 0.5로 대응된 GT 수다.\n\n"
+    overlap = ", ".join(name for name in names if counts[name]["in_calibration"])
+    header = (
+        "4장 결과는 정확도 평가가 아닌 DPU 동작 확인용이다. "
+        f"보정 목록에도 포함된 이미지: {overlap or '없음'}.\n\n"
+        "각 모델 셀은 검출 수 / 같은 클래스·IoU ≥ 0.5로 대응된 GT 수다.\n\n"
+    )
     output = header + "\n".join("| " + " | ".join(row) + " |" for row in rows) + "\n"
     output += "\n같은 클래스에서 IoU가 높은 순으로 한 번씩 대응했다. 빈 분모와 대응 없는 점수 차이는 —로 표시했다.\n\n"
     rows = [["A", "B", "A 대응/전체", "B 대응/전체", "평균 점수 차이 B−A", "평균·최대 절대 차이"],

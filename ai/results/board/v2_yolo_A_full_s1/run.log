@@ -1,11 +1,15 @@
 [info] DPU input (1, 640, 640, 3), in_scale=64.0, outputs=[(1, 80, 80, 64), (1, 40, 40, 64), (1, 20, 20, 64), (1, 80, 80, 3), (1, 40, 40, 3), (1, 20, 20, 3)]
 
-[timing over 6 images] pre 64.7 ms | DPU 66.1 ms | post 77.6 ms | total 208.4 ms = 4.8 FPS (excl. image load)
+[timing over 10 images] pre 64.0 ms | DPU 65.4 ms | post 78.2 ms | total 207.6 ms = 4.8 FPS (excl. image load)
 [info] wrote results/v2_yolo_A_full_s1/detections.json
 2014_000888.jpg: 1 dets  [car:0.92]
 2014_001610.jpg: 4 dets  [person:0.82, person:0.82, person:0.78, person:0.68]
 2014_002785.jpg: 2 dets  [bicycle:0.90, person:0.85]
+2014_003044.jpg: 2 dets  [bicycle:0.90, person:0.82]
+2014_004106.jpg: 2 dets  [bicycle:0.90, person:0.85]
 DSC01845.jpg: 6 dets  [bicycle:0.90, bicycle:0.85, person:0.82, person:0.82, person:0.78]
 DSC02077.jpg: 12 dets  [person:0.88, person:0.85, person:0.85, person:0.82, person:0.73]
 DSC02790.jpg: 3 dets  [person:0.82, car:0.78, bicycle:0.50]
-BOARD_RUN exit=0 wall_s=3.537
+DSC02903.jpg: 15 dets  [car:0.92, person:0.73, person:0.73, person:0.68, person:0.68]
+DSC03927.jpg: 6 dets  [car:0.88, person:0.85, person:0.82, bicycle:0.73, person:0.68]
+BOARD_RUN exit=0 wall_s=4.530

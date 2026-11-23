@@ -1,0 +1,1 @@
+python3 run_detector.py --model yolov8n --xmodel /home/root/exp/v2live/v2_yolo_A_s0.xmodel --images images --out results/v2_yolo_A_s0/detections.json --norm unit --conf 0.25 --iou 0.45 --warmup 3
