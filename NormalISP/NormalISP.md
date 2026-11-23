@@ -109,5 +109,6 @@ extern "C" void NormalISP(
 ### HLS 인터페이스 및 프래그마
 
 - **메모리 포트 (`m_axi`):** `raw_bayer` (`bundle=gmem0`, `offset=slave`, `depth=2048`), `rgb_out` (`bundle=gmem1`, `offset=slave`, `depth=2048`)
-- **제어 레지스터 (`s_axilite`, `bundle=control`):** `raw_bayer`, `rgb_out`, `width`, `height`, (`awb_mode`, `_dev` 전용), `out_width`, `out_height`, `return`
+- **제어 레지스터 (`s_axilite`, `bundle=control`)** — `raw_bayer`, `rgb_out`, `width`, `height`, `out_width`, `out_height`의 기존 오프셋을 유지한다. `_dev`는 `awb_mode`와 AXI-Lite `return`을 유지한다.
+- **정본 대비 RM 제어** — 보드 top의 `return`은 `ap_ctrl_hs`로 분리했다. RM의 RTL 래퍼가 기존 PS의 AP_CTRL 접근을 처리하고, HLS `ap_idle`을 `rm_ap_idle`로 전달한다. 자동 파이프라인의 AWB II=1 및 RGB II=9는 재합성에서도 같았다. [래퍼 계약](../rm_wrapper/README.md)
 - **루프 힌트:** `LOOP_TRIPCOUNT` y `min=4 max=1080`, x `min=4 max=1920` / 내부 보조 함수 `#pragma HLS INLINE`

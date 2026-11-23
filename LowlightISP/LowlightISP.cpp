@@ -180,7 +180,8 @@ extern "C" void LowlightISP(
 #pragma HLS INTERFACE s_axilite port=height bundle=control
 #pragma HLS INTERFACE s_axilite port=out_width bundle=control
 #pragma HLS INTERFACE s_axilite port=out_height bundle=control
-#pragma HLS INTERFACE s_axilite port=return bundle=control
+// RTL 래퍼가 AP_CTRL을 제공하고 ap_idle을 rm_ap_idle로 전달한다.
+#pragma HLS INTERFACE ap_ctrl_hs port=return
     if (!raw_bayer || !rgb_out || width <= 0 || height <= 0) {
         if (out_width) *out_width = 0;
         if (out_height) *out_height = 0;
