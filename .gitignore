@@ -1,1 +1,7 @@
 /build/
+
+# 데이터셋(LOD, PASCALRAW)에서 온 이미지와 라벨, 그 위에 박스를 그린 주석 이미지는
+# 원 배포처 라이선스 때문에 저장소에 포함하지 않는다(로컬에서 생성/복사). ai/README.md 참조.
+/ai/data/demo/images/
+/ai/data/demo/labels/
+/ai/results/**/annotated/

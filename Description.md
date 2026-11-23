@@ -651,10 +651,10 @@ Vivado 2024.1(`xczu7ev-ffvc1156-2-e`, PL0 100 MHz)에서 DPU와 DPU 전용 클�
 ai/                                  🟢
 ├── models/                          🟢 학습된 입력과 보관 DPU 모델
 ├── arch/                            🟢 DPU 지문 설정
-├── data/                            🟢 고정 데모 6장 데이터와 보정 목록
+├── data/                            🟢 데모 6장 목록(`demo_list.txt`)과 보정 목록. 원본 이미지·라벨은 라이선스 때문에 미포함
 ├── board/run_detector.py             🟢 VART 실행과 numpy 후처리
 ├── scripts/                         🟢 재구축·검증·배포 스크립트
-├── results/                         🟢 검출 JSON, 주석 이미지, 구조 및 검출 대조
+├── results/                         🟢 검출 JSON, 구조 및 검출 대조(주석 이미지는 로컬 재생성, 미포함)
 └── README.md · DPU_CONFIG.md · BOARD_RUN.md · RESULTS.md
 ```
 
