@@ -1,0 +1,2104 @@
+{
+  "yolov8n_dpu_v2rebuild": [
+    {
+      "name": "subgraph_RawHead__input_0",
+      "device": "USER",
+      "fingerprint": null,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "RawHead__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "op_types": {
+        "data-fix": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_RawHead__RawHead_C2f_net__Sequential_model__C2f_12__15489",
+      "device": "DPU",
+      "fingerprint": "0x101000056010407",
+      "inputs": [
+        {
+          "name": "RawHead__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_389_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_417_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_445_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_403_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_431_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 1
+        },
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 1
+        }
+      ],
+      "op_types": {
+        "concat-fix": 13,
+        "const-fix": 126,
+        "conv2d-fix": 63,
+        "download": 6,
+        "eltwise-fix": 62,
+        "hard-sigmoid-fix": 56,
+        "pool-fix": 3,
+        "strided_slice-fix": 16,
+        "upload": 1,
+        "upsample-fix": 2
+      },
+      "activations": {
+        "counts": {
+          "hardswish in op name": 112,
+          "hard-sigmoid": 56,
+          "hard-sigmoid+mul": 56
+        },
+        "examples": {
+          "hardswish in op name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv_0__Hardswish_act__ret_409_i0",
+          "hard-sigmoid": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv_0__Hardswish_act__ret_409_i0",
+          "hard-sigmoid+mul": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv_0__Hardswish_act__ret_409"
+        }
+      }
+    },
+    {
+      "name": "subgraph_RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix_",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_431_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_431_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 1
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_431_fix_",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_403_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_403_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_403_fix_",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_445_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_445_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_445_fix_",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_417_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_417_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_417_fix_",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_389_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_389_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "RawHead__RawHead_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_389_fix_",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    }
+  ],
+  "v2_yolo_A_full_s1": [
+    {
+      "name": "subgraph_Raw__input_0",
+      "device": "USER",
+      "fingerprint": null,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "Raw__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "op_types": {
+        "data-fix": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_C2f_net__Sequential_model__C2f_12__15495",
+      "device": "DPU",
+      "fingerprint": "0x101000056010407",
+      "inputs": [
+        {
+          "name": "Raw__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "op_types": {
+        "concat-fix": 13,
+        "const-fix": 126,
+        "conv2d-fix": 63,
+        "download": 6,
+        "eltwise-fix": 63,
+        "hard-sigmoid-fix": 57,
+        "pool-fix": 3,
+        "strided_slice-fix": 16,
+        "upload": 1,
+        "upsample-fix": 2
+      },
+      "activations": {
+        "counts": {
+          "hardswish in op name": 114,
+          "hard-sigmoid": 57,
+          "hard-sigmoid+mul": 57
+        },
+        "examples": {
+          "hardswish in op name": "Raw__Raw_C2f_net__Sequential_model__C2f_4__Conv_cv2__Hardswish_act__ret_105_i0",
+          "hard-sigmoid": "Raw__Raw_C2f_net__Sequential_model__C2f_4__Conv_cv2__Hardswish_act__ret_105_i0",
+          "hard-sigmoid+mul": "Raw__Raw_C2f_net__Sequential_model__C2f_4__Conv_cv2__Hardswish_act__ret_105"
+        }
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix_",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix_",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix_",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix_",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix_",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix_",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    }
+  ],
+  "v2_yolo_A_full_s2": [
+    {
+      "name": "subgraph_Raw__input_0",
+      "device": "USER",
+      "fingerprint": null,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "Raw__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "op_types": {
+        "data-fix": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_C2f_net__Sequential_model__C2f_12__15495",
+      "device": "DPU",
+      "fingerprint": "0x101000056010407",
+      "inputs": [
+        {
+          "name": "Raw__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "op_types": {
+        "concat-fix": 13,
+        "const-fix": 126,
+        "conv2d-fix": 63,
+        "download": 6,
+        "eltwise-fix": 63,
+        "hard-sigmoid-fix": 57,
+        "pool-fix": 3,
+        "strided_slice-fix": 16,
+        "upload": 1,
+        "upsample-fix": 2
+      },
+      "activations": {
+        "counts": {
+          "hardswish in op name": 114,
+          "hard-sigmoid": 57,
+          "hard-sigmoid+mul": 57
+        },
+        "examples": {
+          "hardswish in op name": "Raw__Raw_C2f_net__Sequential_model__C2f_6__Conv_cv2__Hardswish_act__ret_161_i0",
+          "hard-sigmoid": "Raw__Raw_C2f_net__Sequential_model__C2f_6__Conv_cv2__Hardswish_act__ret_161_i0",
+          "hard-sigmoid+mul": "Raw__Raw_C2f_net__Sequential_model__C2f_6__Conv_cv2__Hardswish_act__ret_161"
+        }
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix_",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix_",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix_",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix_",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix_",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix_",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    }
+  ],
+  "v2_yolo_A_s0": [
+    {
+      "name": "subgraph_Raw__input_0",
+      "device": "USER",
+      "fingerprint": null,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "Raw__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "op_types": {
+        "data-fix": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_C2f_net__Sequential_model__C2f_12__15495",
+      "device": "DPU",
+      "fingerprint": "0x101000056010407",
+      "inputs": [
+        {
+          "name": "Raw__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "op_types": {
+        "concat-fix": 13,
+        "const-fix": 126,
+        "conv2d-fix": 63,
+        "download": 6,
+        "eltwise-fix": 63,
+        "hard-sigmoid-fix": 57,
+        "pool-fix": 3,
+        "strided_slice-fix": 16,
+        "upload": 1,
+        "upsample-fix": 2
+      },
+      "activations": {
+        "counts": {
+          "hardswish in op name": 114,
+          "hard-sigmoid+mul": 57,
+          "hard-sigmoid": 57
+        },
+        "examples": {
+          "hardswish in op name": "Raw__Raw_C2f_net__Sequential_model__C2f_15__Conv_cv1__Hardswish_act__ret_265",
+          "hard-sigmoid+mul": "Raw__Raw_C2f_net__Sequential_model__C2f_15__Conv_cv1__Hardswish_act__ret_265",
+          "hard-sigmoid": "Raw__Raw_C2f_net__Sequential_model__C2f_15__Bottleneck_m__ModuleList_0__Conv_cv1__Hardswish_act__ret_279_i0"
+        }
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_2__Conv2d_2__ret_fix_",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_1__Conv2d_2__ret_433_fix_",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv3__ModuleList_0__Conv2d_2__ret_405_fix_",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_2__Conv2d_2__ret_447_fix_",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_1__Conv2d_2__ret_419_fix_",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix_",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "Raw__Raw_Sequential_net__Sequential_model__Detect_22__ModuleList_cv2__ModuleList_0__Conv2d_2__ret_391_fix_",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "fix2float": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    }
+  ],
+  "yolov8n_dpu": [
+    {
+      "name": "subgraph_YOLOv8nDPU__input_0",
+      "device": "USER",
+      "fingerprint": null,
+      "inputs": [],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "op_types": {
+        "data-fix": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__C2f_model__C2f_12__19630",
+      "device": "DPU",
+      "fingerprint": "0x101000056010407",
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__input_0_fix",
+          "shape": [
+            1,
+            640,
+            640,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 6
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_0__Conv2d_2__ret_297_inserted_fix_21",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_1__Conv2d_2__ret_309_inserted_fix_23",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_2__Conv2d_2__ret_321_inserted_fix_25",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_0__Conv2d_2__ret_335_inserted_fix_20",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_1__Conv2d_2__ret_347_inserted_fix_22",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_2__Conv2d_2__ret_359_inserted_fix_24",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "op_types": {
+        "concat-fix": 13,
+        "const-fix": 126,
+        "conv2d-fix": 63,
+        "download": 6,
+        "eltwise-fix": 62,
+        "hard-sigmoid-fix": 56,
+        "pool-fix": 3,
+        "strided_slice-fix": 16,
+        "upload": 1,
+        "upsample-fix": 2
+      },
+      "activations": {
+        "counts": {
+          "hardswish in op name": 112,
+          "hard-sigmoid": 56,
+          "hard-sigmoid+mul": 56
+        },
+        "examples": {
+          "hardswish in op name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__C2f_model__C2f_8__Conv_cv1__Hardswish_act__19206_i0",
+          "hard-sigmoid": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__C2f_model__C2f_8__Conv_cv1__Hardswish_act__19206_i0",
+          "hard-sigmoid+mul": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__C2f_model__C2f_8__Conv_cv1__Hardswish_act__19206"
+        }
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_2__Conv2d_2__ret_359_inserted_fix_24_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_2__Conv2d_2__ret_359_sink_transpose_5",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_2__Conv2d_2__ret_359_inserted_fix_24",
+          "shape": [
+            1,
+            20,
+            20,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_2__Conv2d_2__ret_359_sink_transpose_5_inserted_fix_18",
+          "shape": [
+            1,
+            3,
+            20,
+            20
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "op_types": {
+        "fix2float": 1,
+        "float2fix": 1,
+        "transpose": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_1__Conv2d_2__ret_347_inserted_fix_22_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_1__Conv2d_2__ret_347_sink_transpose_4",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_1__Conv2d_2__ret_347_inserted_fix_22",
+          "shape": [
+            1,
+            40,
+            40,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_1__Conv2d_2__ret_347_sink_transpose_4_inserted_fix_16",
+          "shape": [
+            1,
+            3,
+            40,
+            40
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "op_types": {
+        "fix2float": 1,
+        "float2fix": 1,
+        "transpose": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_0__Conv2d_2__ret_335_inserted_fix_20_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_0__Conv2d_2__ret_335_sink_transpose_3",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_0__Conv2d_2__ret_335_inserted_fix_20",
+          "shape": [
+            1,
+            80,
+            80,
+            3
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_0__Conv2d_2__ret_335_sink_transpose_3_inserted_fix_14",
+          "shape": [
+            1,
+            3,
+            80,
+            80
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "op_types": {
+        "fix2float": 1,
+        "float2fix": 1,
+        "transpose": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__ret_337_reshaped",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_0__Conv2d_2__ret_335_sink_transpose_3_inserted_fix_14",
+          "shape": [
+            1,
+            3,
+            80,
+            80
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_1__Conv2d_2__ret_347_sink_transpose_4_inserted_fix_16",
+          "shape": [
+            1,
+            3,
+            40,
+            40
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv3__ModuleList_2__Conv2d_2__ret_359_sink_transpose_5_inserted_fix_18",
+          "shape": [
+            1,
+            3,
+            20,
+            20
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__ret_363_fix(DeviceReassignment)",
+          "shape": [
+            1,
+            3,
+            8400
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "op_types": {
+        "concat-fix": 1,
+        "reshape-fix": 4
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_2__Conv2d_2__ret_321_inserted_fix_25_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_2__Conv2d_2__ret_321_sink_transpose_2",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_2__Conv2d_2__ret_321_inserted_fix_25",
+          "shape": [
+            1,
+            20,
+            20,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_2__Conv2d_2__ret_321_sink_transpose_2_inserted_fix_19",
+          "shape": [
+            1,
+            64,
+            20,
+            20
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "op_types": {
+        "fix2float": 1,
+        "float2fix": 1,
+        "transpose": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_1__Conv2d_2__ret_309_inserted_fix_23_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_1__Conv2d_2__ret_309_sink_transpose_1",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_1__Conv2d_2__ret_309_inserted_fix_23",
+          "shape": [
+            1,
+            40,
+            40,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_1__Conv2d_2__ret_309_sink_transpose_1_inserted_fix_17",
+          "shape": [
+            1,
+            64,
+            40,
+            40
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "op_types": {
+        "fix2float": 1,
+        "float2fix": 1,
+        "transpose": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_0__Conv2d_2__ret_297_inserted_fix_21_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_0__Conv2d_2__ret_297_sink_transpose_0",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_0__Conv2d_2__ret_297_inserted_fix_21",
+          "shape": [
+            1,
+            80,
+            80,
+            64
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_0__Conv2d_2__ret_297_sink_transpose_0_inserted_fix_15",
+          "shape": [
+            1,
+            64,
+            80,
+            80
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "op_types": {
+        "fix2float": 1,
+        "float2fix": 1,
+        "transpose": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__ret_373",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_0__Conv2d_2__ret_297_sink_transpose_0_inserted_fix_15",
+          "shape": [
+            1,
+            64,
+            80,
+            80
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_1__Conv2d_2__ret_309_sink_transpose_1_inserted_fix_17",
+          "shape": [
+            1,
+            64,
+            40,
+            40
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__Sequential_cv2__ModuleList_2__Conv2d_2__ret_321_sink_transpose_2_inserted_fix_19",
+          "shape": [
+            1,
+            64,
+            20,
+            20
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__ret_373_fix(DeviceReassignment)",
+          "shape": [
+            1,
+            4,
+            16,
+            8400
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "op_types": {
+        "concat-fix": 1,
+        "reshape-fix": 4
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__ret_373_fix_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__ret_375",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__ret_373_fix(DeviceReassignment)",
+          "shape": [
+            1,
+            4,
+            16,
+            8400
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__ret_377_fix",
+          "shape": [
+            1,
+            4,
+            8400,
+            16
+          ],
+          "dtype": "xint8",
+          "fix_point": 7
+        }
+      ],
+      "op_types": {
+        "fix": 1,
+        "fix2float": 1,
+        "float2fix": 1,
+        "softmax": 1,
+        "transpose": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__Conv2d_conv__ret_379",
+      "device": "DPU",
+      "fingerprint": "0x101000056010407",
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__ret_377_fix",
+          "shape": [
+            1,
+            4,
+            8400,
+            16
+          ],
+          "dtype": "xint8",
+          "fix_point": 7
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__ret_381_fix",
+          "shape": [
+            1,
+            4,
+            8400
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        }
+      ],
+      "op_types": {
+        "const-fix": 2,
+        "conv2d-fix": 1,
+        "download": 1,
+        "reshape-fix": 1,
+        "upload": 1
+      },
+      "activations": {
+        "counts": {},
+        "examples": {}
+      }
+    },
+    {
+      "name": "subgraph_YOLOv8nDPU__21591",
+      "device": "CPU",
+      "fingerprint": null,
+      "inputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__DFL_dfl__ret_381_fix",
+          "shape": [
+            1,
+            4,
+            8400
+          ],
+          "dtype": "xint8",
+          "fix_point": 3
+        },
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__ret_363_fix(DeviceReassignment)",
+          "shape": [
+            1,
+            3,
+            8400
+          ],
+          "dtype": "xint8",
+          "fix_point": 2
+        }
+      ],
+      "outputs": [
+        {
+          "name": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__ret_fix_",
+          "shape": [
+            1,
+            7,
+            8400
+          ],
+          "dtype": "float32",
+          "fix_point": null
+        }
+      ],
+      "op_types": {
+        "concat-fix": 2,
+        "const-fix": 4,
+        "eltwise-fix": 6,
+        "fix2float": 2,
+        "float2fix": 1,
+        "sigmoid": 1,
+        "strided_slice-fix": 2
+      },
+      "activations": {
+        "counts": {
+          "sigmoid": 1
+        },
+        "examples": {
+          "sigmoid": "YOLOv8nDPU__YOLOv8nDPU_DetectionModel_model__Detect_model__Detect_22__ret_405"
+        }
+      }
+    }
+  ]
+}

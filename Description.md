@@ -26,6 +26,13 @@
   - [2.3 DFX 구현과 최종 연결 구조](#23-dfx-구현과-최종-연결-구조)
   - [2.4 checker 테스트](#24-checker-테스트)
 - [3. AI](#3-ai)
+  - [3.1 모델과 DPU 구성](#31-모델과-dpu-구성)
+  - [3.2 학습 기록](#32-학습-기록)
+  - [3.3 양자화와 컴파일 재구축](#33-양자화와-컴파일-재구축)
+  - [3.4 보드 DPU 추론 확인](#34-보드-dpu-추론-확인)
+  - [3.5 DPU IP 설정](#35-dpu-ip-설정)
+  - [3.6 10월 실험에서의 모델 역할](#36-10월-실험에서의-모델-역할)
+  - [3.7 한계와 미확인 항목](#37-한계와-미확인-항목)
 - [4. PetaLinux](#4-petalinux)
 - [5. End-to-End](#5-end-to-end)
 
@@ -607,10 +614,44 @@ AXI 응답 관측기(response_observer) ─▶ safety_guard.event_error
 
 > **튜토리얼 대응:** 3장 Vitis AI(YOLOv8n 학습·양자화), 4장 DPU 연결 · **저장소:** `JNU_DFXISP_AI`
 
-`(작성 예정)`
+```text
+ai/                                  🟢
+├── models/                          🟢 학습된 입력과 보관 DPU 모델
+├── arch/                            🟢 DPU 지문 설정
+├── data/                            🟢 고정 데모 6장 데이터와 보정 목록
+├── board/run_detector.py             🟢 VART 실행과 numpy 후처리
+├── scripts/                         🟢 재구축·검증·배포 스크립트
+├── results/                         🟢 검출 JSON, 주석 이미지, 구조 및 검출 대조
+└── README.md · DPU_CONFIG.md · BOARD_RUN.md · RESULTS.md
+```
 
-- **확인된 사항:** 대상 DPU는 B4096 + URAM 구성이며 fingerprint는 `0x101000056010407`이다(`dfxisp_essen/hw/NormalISP_DPU/arch.json`, 설계 문서 `dfxisp_essen/hw/docs/NormalISP_DPU_plan.md`). 모델 자료는 `dfxisp_essen/hw/ai/models/yolov8n`에 있다.
-- **범위 구분:** 튜토리얼은 YOLOv8n 학습·양자화·컴파일 절차를 다루지만, 본 연구는 검출기를 평가 도구로만 사용하며 검출기의 학습·개선은 연구 제외 범위이다(§연구 범위).
+### 3.1 모델과 DPU 구성
+
+객체 검출기는 ISP와 DFX의 평가 도구다. 보관된 YOLOv8n 체크포인트는 `person`, `car`, `bicycle` 3클래스를 사용한다. 640×640 RGB를 입력하고 DPU의 첫 서브그래프에서 박스 분포와 클래스 로짓을 받아 PS에서 numpy로 DFL·디코드·NMS를 실행한다. [AI 파일과 입력 출처](ai/README.md)
+
+### 3.2 학습 기록
+
+10월 실험에서는 BASE `yolov8n.pt`의 활성화를 학습 전에 Hardswish로 치환했다. 야간 Normal과 Lowlight(BLC16) 두 뷰 및 주간 replay를 사용했다. 전체 파라미터를 학습하는 A_full과 앞 10층을 고정하는 B_freeze10을 비교했다. 기본 설정은 SGD, `lr0=0.002`, 30 epoch, 640 입력, 배치 16 및 지정 시드였다. 보드 SD 백업의 `v2live` 모델은 A_full 시드 0·1·2 컴파일본이다. 이번 PC에는 당시 작업 폴더와 학습 데이터가 없어 학습은 생략했다. [학습 코드 근거와 모델 해시](ai/README.md#학습이번-재구축에서-생략)
+
+### 3.3 양자화와 컴파일 재구축
+
+Vitis AI 3.5 CPU 컨테이너에서 체크포인트의 `state_dict` 355키를 이관해 분류 head를 복원했다. 데모 6장을 제외한 LOD·PASCAL 참조 JPG 128장으로 PTQ를 수행한 뒤 batch 1 xmodel을 내보내고 B4096에 컴파일했다. 최종 xmodel의 DPU 서브그래프는 1개이고 지문은 `0x101000056010407`이다. 호스트 데모 검출 수는 SiLU FP32 25건, Hardswish FP32 34건, Hardswish INT8 32건이다. 10월 보정에는 학습 분할의 ISP 출력 PNG를 사용했다. [실행 결과](ai/RESULTS.md)
+
+### 3.4 보드 DPU 추론 확인
+
+고정 JPG는 PASCAL의 `2014_000888`, `2014_001610`, `2014_002785`와 LOD의 `DSC01845`, `DSC02077`, `DSC02790`이다. 재구축 모델, reference, v2live 3개가 모두 보드에서 6장을 처리했다. 재구축 모델은 32건을 검출했고 그중 27건이 같은 클래스·IoU 0.5 이상으로 GT에 대응했다. 32건 모두 호스트 INT8 검출과 대응했다. 재구축 모델의 첫 DPU 서브그래프 호출은 평균 65.4 ms/장, JPG 로드를 제외한 전체 처리는 208.3 ms/장이었다. [실행 결과](ai/RESULTS.md) · [보드 재생 절차](ai/BOARD_RUN.md)
+
+### 3.5 DPU IP 설정
+
+TF의 `dpuczdx8g_0`은 B4096·URAM 구성으로, 보드 조회에서 지문 `0x101000056010407`, 300 MHz, 1코어, Vivado 플로우를 확인했다. TF의 DPU 제어 주소는 `0xA1000000`이다. 명령 AXI는 HPC0, 두 데이터 AXI는 HP1·HP2를 사용한다. 클럭 위저드의 첫 출력은 600 MHz, 두 번째는 300 MHz다. [TF BD·XCI 키와 9월 계획 대조](ai/DPU_CONFIG.md)
+
+### 3.6 10월 실험에서의 모델 역할
+
+10월 보고는 야간 검출 향상의 대부분을 새 혼합 학습 모델과 학습 데이터에 돌렸다. YOLO DFX 자동 전환은 최고 고정 구성과 같은 수준이며, 최고 고정 구성을 앞섰다는 근거는 확인되지 않았다. 근거는 정본 `2026-10-v2-board/README.md:13–19` 및 `notes/2026-10-14-v2-balanced-model-board-replay.md:116–120,279–285`다.
+
+### 3.7 한계와 미확인 항목
+
+보관 FP32 모델은 SiLU를 사용했고, 이번 양자화에서는 SiLU를 Hardswish로 치환했다. 재구축 보정 자료는 10월 ISP 학습 PNG와 출처가 다르다. 고정 JPG 6장으로는 검출 일반화나 ISP별 정확도를 판단할 수 없다. 10월 학습의 재현과 보드 부팅 비트스트림의 TF 빌드 계보는 (확인 필요).
 
 ---
 

@@ -13,6 +13,7 @@ dfxisp_v2/
 ├── vectors/            # 비트 단위 회귀 검증용 고정 기준 벡터 CSV
 ├── checker/            # Scene Checker HLS, RTL 및 테스트벤치
 ├── dfx_shell/          # DFX 전환을 제어하는 PL 정적 요소(Static Logic) RTL
+├── ai/                 # YOLOv8n 양자화·컴파일, DPU 재생과 결과
 └── hls/                # Tcl 빌드·패키징과 실행 결과
 ```
 
