@@ -13,13 +13,15 @@ dfxisp_v2/
 ├── vectors/            # 비트 단위 회귀 검증용 고정 기준 벡터 CSV
 ├── checker/            # Scene Checker HLS, RTL 및 테스트벤치
 ├── dfx_shell/          # DFX 전환을 제어하는 PL 정적 요소(Static Logic) RTL
+├── rm_wrapper/         # RM 제어 AXI-Lite 래퍼와 XSim 테스트벤치
+├── vivado/             # 통합 BD와 DFX 빌드 Tcl
 ├── ai/                 # YOLOv8n 양자화·컴파일, DPU 재생과 결과
 └── hls/                # Tcl 빌드·패키징과 실행 결과
 ```
 
 > `vectors/`의 기준 벡터 CSV(`NormalISP_vectors.csv`, `LowlightISP_vectors.csv`)는 독립 Python 구현에서 생성한 고정 회귀 픽스처입니다.
 
-ISP 소스 4개와 `checker/checker.hpp`의 코드는 주석 정리를 제외하면 정본과 동일합니다(`g++ -E -P` 대조). 기준 벡터 CSV, `checker.cpp`, checker 및 DFX 셸 RTL은 해당 정본과 바이트 단위로 일치합니다(`cmp` 대조).
+ISP는 정본의 연산을 유지하며 두 보드 top의 블록 제어만 `ap_ctrl_hs`로 분리했습니다. `checker/checker.hpp` 코드는 주석 정리를 제외하면 정본과 동일합니다(`g++ -E -P` 대조). 기준 벡터 CSV, `checker.cpp`, checker 및 DFX 셸 RTL은 해당 정본과 바이트 단위로 일치합니다(`cmp` 대조).
 
 ## 환경
 
@@ -57,3 +59,13 @@ checker HLS 내보내기가 완료된 후 Vivado에서 `build/ip_repo/checker_ip
 ```
 
 최종 통합 설계와 비교한 포트 및 인터페이스는 [checker IP 패키징 결과](build/checker_ip_comparison.md)에 정리했습니다.
+
+## Vivado DFX 빌드(Tcl)
+
+두 ISP와 checker IP를 준비한 뒤 통합 BD부터 비트스트림까지 순서대로 실행합니다.
+
+```bash
+mkdir -p build/vivado && (cd build/vivado && source /tools/Xilinx/Vivado/2024.1/settings64.sh && vivado -mode batch -source ../../vivado/build_static_bd.tcl > cp2.log 2>&1 && { n=2; for stage in synth impl bits; do n=$((n+1)); vivado -mode batch -source ../../vivado/build_dfx.tcl -tclargs "$stage" > "cp$n.log" 2>&1 || exit; done; })
+```
+
+[Vivado 단계 및 산출물](vivado/README.md)

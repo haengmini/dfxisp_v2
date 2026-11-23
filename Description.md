@@ -249,7 +249,7 @@ flowchart LR
 
 조도별 영상 처리 모듈 두 개(재구성 모듈, RM)를 HLS C++로 구현한 부분이다. 두 모듈은 6개 매개변수의 타입·순서가 같은 최상위 함수를 가져 하나의 재구성 영역(RP)에 교체 탑재할 수 있다.
 
-두 ISP의 `.hpp`·`.cpp`는 주석 정리를 제외한 코드가 정본과 동일하다(`g++ -E -P` 대조). 기준 벡터 CSV 두 개는 정본과 바이트 단위로 일치한다(`cmp` 대조).
+두 ISP는 정본의 연산을 유지하며 V2에서는 보드 top의 제어 pragma를 변경했다(§2.3). 기준 벡터 CSV 두 개는 정본과 바이트 단위로 일치한다(`cmp` 대조).
 
 ```text
 dfxisp_v2/
@@ -321,7 +321,7 @@ flowchart LR
   - 가드: null 또는 비양수 크기 입력 시 `out_width=out_height=0` 반환
 - **핵심 상수:** `RAW12_MAX=4095`, `BLC_LEVEL12=32`(`2<<4`), `BLC_MUL_Q8=258`, `GAIN_R_Q8=286`, `GAIN_B_Q8=307`, `AWB_GAIN_MIN_Q8=64`, `AWB_GAIN_MAX_Q8=1024`, `CCM_Q8={{288,-24,-8},{-24,296,-16},{-16,-32,304}}`(각 행 합 256), `GAMMA2_LUT[256]`(`0..255`), `LOOP_TRIPCOUNT` y `4..1080` / x `4..1920`
 - **파이프라인** (명시적 `PIPELINE` 없음, 자동 파이프라인 결과 RGB 루프 II=9 — 3×3 창 RAW 읽기)
-- **HLS 인터페이스:** `raw_bayer`(`m_axi gmem0`, `depth=2048`) → `rgb_out`(`m_axi gmem1`, `depth=2048`), 스칼라 입출력 및 `return`은 `s_axilite control`
+- **HLS 인터페이스:** `raw_bayer`(`m_axi gmem0`, `depth=2048`) → `rgb_out`(`m_axi gmem1`, `depth=2048`), 인자 레지스터는 `s_axilite control`에 유지하고, 보드 top의 `return`은 `ap_ctrl_hs`로 RM 제어 래퍼에 연결한다
 
 </details>
 
@@ -374,7 +374,7 @@ flowchart LR
   - 이득 및 WB: `gain_q8=(512*wb_q8)>>8`, `[0, 4095]` 클램프(적응형 AWB 없음)
   - 가드: null 또는 비양수 크기 입력 시 `out_width=out_height=0` 반환
 - **핵심 상수:** `RAW12_MAX=4095`, `BLC_LEVEL12=16`(`1<<4`), `BLC_MUL_Q8=257`, `EXPOSURE_GAIN_Q8=512`(2.0×), `WB_R_Q8=286`, `WB_G_Q8=256`, `WB_B_Q8=307`, `CCM_Q8={{288,-24,-8},{-24,296,-16},{-16,-32,304}}`, `GAMMA2_LUT[256]`(`0..255`), `LOOP_TRIPCOUNT` y `1..540` / x `2..960`, 내측 루프 `#pragma HLS PIPELINE II=1` (요청 II=1, 합성 II=16 — 출력 화소당 RAW 16회 읽기 대 단일 `m_axi` 읽기 포트)
-- **HLS 인터페이스:** `raw_bayer`(`m_axi gmem0`, `depth=2048`) → `rgb_out`(`m_axi gmem1`, `depth=2048`), 스칼라 입출력 및 `return`은 `s_axilite control`
+- **HLS 인터페이스:** `raw_bayer`(`m_axi gmem0`, `depth=2048`) → `rgb_out`(`m_axi gmem1`, `depth=2048`), 인자 레지스터는 `s_axilite control`에 유지하고, 보드 top의 `return`은 `ap_ctrl_hs`로 RM 제어 래퍼에 연결한다
 
 </details>
 
@@ -416,8 +416,8 @@ flowchart LR
 
   | ISP | C-sim | 추정 클럭 (목표 4 ns) | LUT / FF / DSP / BRAM_18K | 달성 II |
   |---|---|---|---|---|
-  | NormalISP | PASS 10/10 | 2.920 ns (uncertainty 1.08 ns) | 12,812 / 9,518 / 28 / 4 | AWB 스캔 1, RGB 처리 9 |
-  | LowlightISP | PASS 11/11 | 2.920 ns (uncertainty 1.08 ns) | 7,041 / 4,919 / 14 / 4 | 16 (요청 1) |
+  | NormalISP | PASS 10/10 | 2.920 ns (uncertainty 1.08 ns) | 12,812 / 9,512 / 28 / 4 | AWB 스캔 1, RGB 처리 9 |
+  | LowlightISP | PASS 11/11 | 2.920 ns (uncertainty 1.08 ns) | 7,041 / 4,913 / 14 / 4 | 16 (요청 1) |
 
   C/RTL co-sim과 RTL export(IP catalog)도 두 ISP 모두 통과한 것으로 기록되어 있다(상세는 `hls/RESULTS.md`).
 - **달성 II의 한계:** 두 ISP의 화소 루프에서 단일 읽기 포트(`m_axi gmem0`) 제약으로 `HLS 200-885` 경고가 발생했다. LowlightISP는 출력 화소당 `raw[]` 16회 읽기로 II=16(요청 II=1), NormalISP는 3×3 창 읽기로 자동 파이프라인된 RGB 루프에서 II=9를 기록했다. 보드 실험은 저장된 프레임을 재생했다. [LowlightISP 설계 문서 §5](LowlightISP/LowlightISP.md)
@@ -590,11 +590,44 @@ PS permit GPIO ──ctrl──▶ safety_guard ;  safety_guard.guard_status ─
 AXI 응답 관측기(response_observer) ─▶ safety_guard.event_error
 ```
 
-- **`rm_idle`은 RM의 실제 `ap_idle`이다.** 정본은 HLS가 생성한 `NormalISP.v`·`LowlightISP.v`에 `assign rm_ap_idle = ap_idle;`을 추가해 가드와 checker에 전달했다(`idle_ip_repo/NormalISP/hdl/verilog/NormalISP.v:277`). V2의 복사본 실험에서는 기존 AXI-Lite 제어와 idle 동작을 함께 만족하는 후보를 확인하지 못했다. [RM idle 탐색 결과](build/idle_probe/RESULTS.md)
+- **`rm_idle`은 RM의 실제 `ap_idle`이다.** TF와 V2 모두 `rm_ap_idle`을 가드와 checker에 전달한다.
 - **가드와 어댑터는 직렬이다.** `checker_ip` 내부 `dfxc_trigger_adapter`가 만든 후보 트리거를 `safety_guard`가 `candidate`로 받아 게이트하고, DFX Controller의 `rm_shutdown_ack`는 가드가 만든다.
 - DPU(`dpuczdx8g_0`)와 DPU용 클럭·SmartConnect도 같은 BD에 있으나 이 절의 범위 밖이다(§3).
 - **Pblock.** 최종 `isp_rp_floorplan.xdc:1–4`에 `pblock_isp_rp`, 1단계와 같은 클럭 리전 `X1Y0:X2Y0`, `SNAPPING_MODE=ON`이 설정되어 있다. 최종 구현 보고서 `unified_final_v2/gate_reports/{normal,lowlight}_utilization_pblock.rpt:36–48`의 `CONTAIN_ROUTING`과 `EXCLUDE_PLACEMENT`는 모두 1이다.
 - **비트스트림 주소·크기.** `TF/edit_bd.tcl:14–26`과 최종 BD의 DFXC `ALL_PARAMS`에 RM_0 Normal `0x70800000`, RM_1 Lowlight `0x70A00000`, 각각 1,447,292 B가 설정되어 있다. PS는 해당 DDR 주소에 파셜을 적재하고 크기와 읽기 값을 확인한다(`experiment_v2/app/zcu_runtime.py:21–29,119–131`). 런타임 DFXC 주소·크기 쓰기는 보드 전환 코드에서 사용하지 않는다. [최종 통합 BD 조사](build/ch2_facts.md)
+
+#### RM 제어 방식 변경(정본 대비)
+
+| 항목 | TF | V2 |
+| --- | --- | --- |
+| HLS 블록 제어 | `s_axilite`의 AP_CTRL | `ap_ctrl_hs`의 개별 핀을 공유 RTL 래퍼에 연결 |
+| 외부 idle | 생성 Verilog 후처리에서 `assign rm_ap_idle = ap_idle;` 추가(`TF/idle_ip_repo/NormalISP/hdl/verilog/NormalISP.v:277`) | RTL 래퍼가 코어의 `ap_idle`을 RP 경계로 전달 |
+| PS 접근 | AP_CTRL의 start, done, idle | 래퍼가 같은 비트를 제공하며 인터럽트 레지스터와 auto-restart는 0으로 읽힘 |
+| 연산·인터페이스 | 원래 ISP 연산, AXI-Lite 인자 오프셋, RP 포트 | 기준 벡터 비트 일치, 인자 오프셋과 RP 포트 일치 |
+
+2차 탐색에서는 AXI-Lite 제어를 보존하면서 지속적인 idle 핀을 제공하는 HLS 단독 후보를 찾지 못했다. 방안 B는 블록 제어를 분리하고 PS가 쓰는 AP_CTRL 동작을 RM 내부의 직접 작성 RTL에서 구현한다. XSim에서 두 RM 각각 8×8 입력 3개와 연속 재시작을 통과했고, RP 경계의 포트 이름·방향·폭은 양 RM과 TF 사이에서 일치했다. [2차 탐색 결과](build/idle_probe/RESULTS.md) · [래퍼 계약](rm_wrapper/README.md) · [체크포인트 1](build/ch3_rm/CHECKPOINT1.md)
+
+V2의 DPU 제외 통합 BD는 TF와 동일한 100 MHz PL0, PS 제어 주소 5개 및 DFXC 부분 비트스트림 설정을 사용한다. Vivado의 `validate_bd_design`을 통과했으며 DPU 관련 연결과 SmartConnect 포트 번호를 제외한 비교에서 신호 네트 30개와 인터페이스 네트 18개가 일치했다. [체크포인트 2](build/vivado/reports/CHECKPOINT2.md)
+
+두 DFX 구성의 배선 후 WNS/TNS/WHS는 각각 +3.750/0/+0.010 ns이고, `pr_verify -full_check`가 통과했다. Normal 전체 비트스트림 1개와 부분 비트스트림 2개를 생성했다. 두 ICAP 페이로드는 각각 1,447,292 B로, DFXC의 크기 설정과 일치한다. 이 빌드의 보드 전환 확인은 (확인 필요). [구현 보고서](build/vivado/reports/CHECKPOINT4.md) · [비트스트림 보고서](build/vivado/reports/CHECKPOINT5.md)
+
+#### V2 재현 결과 (DPU 제외, 2026-11-23)
+
+Vivado 2024.1(`xczu7ev-ffvc1156-2-e`, PL0 100 MHz)에서 DPU와 DPU 전용 클럭·AXI·IRQ 경로를 제외한 DFX 구성을 끝까지 재현했다(체크포인트 2~5). 아래 수치는 각 체크포인트 요약과 원본 보고서(`build/vivado/reports/`)에서 대조해 확인했다.
+
+| 단계 | 항목 | V2 재현 결과 (DPU 제외) | 원본 보고서 |
+| --- | --- | --- | --- |
+| CP2 | 통합 BD 검증 | `validate_bd_design -force` 통과, TF 대비 신호 네트 30/30 · 인터페이스 네트 18/18 일치, PS 주소 5개(`0xA0000000`, `0xA2000000`, `0xA3000000`, `0xA3010000`, `0xA3020000`, 각 64 KiB), DFX aperture DRC 오류·경고 0건 | `CHECKPOINT2.md`, `cp2_connection_compare.txt` |
+| CP3 | 합성 자원 (LUT / FF / RAMB18 / DSP) | 상위(Normal 포함) 20,832 / 29,322 / 4 / 40 · PL 정적 요소(차감) 15,419 / 22,028 / 1 / 12 · Normal RM 5,413 / 7,294 / 3 / 28 · Lowlight RM 4,662 / 5,076 / 3 / 14 | `synth_1_hier.rpt`, `isp_rp_inst_0_synth_1_hier.rpt`, `isp_rp_lowlightISP_inst_0_synth_1_hier.rpt` |
+| CP4 | 구현 타이밍·배선·DRC (@100 MHz) | 두 구성 모두 WNS/TNS/WHS **+3.750 / 0.000 / +0.010 ns**, 실패 엔드포인트 0, 배선 오류 0, DRC 오류 0, Critical Warning 0, DRC 경고 Normal 81건 / Lowlight 50건 (권고 각 2건) | `normal_timing.rpt`, `lowlight_timing.rpt`, `normal_route.rpt`, `lowlight_route.rpt`, `normal_drc.rpt`, `lowlight_drc.rpt` |
+| CP4 | 구현 자원 (LUT / FF / RAMB18 / DSP) | 전체 Normal 18,370 / 26,887 / 4 / 40 · Lowlight 17,631 / 24,670 / 4 / 26 · PL 정적 요소(차감) 13,110 / 19,595 / 1 / 12 | `normal_hier.rpt`, `lowlight_hier.rpt` |
+| CP4 | pblock 사용률 (`X1Y0:X2Y0`, 가용 18,880 / 37,760 / 24 / 216) | Normal: LUT 5,260 (27.86%), FF 7,292 (19.31%), BRAM 1.5 (6.25%), DSP 28 (12.96%)<br/>Lowlight: LUT 4,521 (23.95%), FF 5,075 (13.44%), BRAM 1.5 (6.25%), DSP 14 (6.48%) | `normal_pblock.rpt`, `lowlight_pblock.rpt` |
+| CP5 | `pr_verify` 통계 | RM 1, 파티션 핀 198, PL 정적 요소 타일 29,573, 사이트 2,750, 셀 39,234, 배선 노드 459,398, 배선 PIP 429,255 — 두 체크포인트 호환(`are compatible`) | `pr_verify.log` |
+| CP5 | 비트스트림 크기 | `full_normal.bit` 19,311,212 B · `partial_{normal,lowlight}.bit` 각 1,447,425 B · `partial_{normal,lowlight}.{bin,icap.bin}` 각 **1,447,292 B** (DFXC `BS SIZE=1447292` 일치) | `bitstream_sha256.txt`, `CHECKPOINT5.md` |
+
+- **1단계(2026-09-23)와 V2 재현 구분:** 1단계는 PS·SmartConnect·AXI-Lite 어댑터만 포함한 최소 셸(전체 LUT 8,477/7,752, `pr_verify` 파티션 핀 121, 정적 셀 10,212)이었고, V2 재현은 여기에 `checker_ip`, `safety_guard`, `dfx_controller_0`, `dfx_decoupler_0`, AXI Shutdown Manager 3개, `response_observer`, `icap_dfx_bridge_0`을 통합한 PL 정적 요소(Static Logic) 구성이다.
+- **최종 통합 설계(TF)와 비교 범위:** 이번 V2 재현은 DPU(`dpuczdx8g_0`)와 DPU 전용 클럭·SmartConnect를 제외한 구성이므로, 전체 LUT/FF/DSP 및 전역 WNS(TF의 +0.064 ns는 DPU 클럭 위저드 경로)는 TF와 직접 비교하지 않는다.
+- **갱신된 확인 사항과 미확인 항목:** 통합 BD 검증 통과 및 V2 partial `.bin`/`.icap.bin` 크기(1,447,292 B)와 DFXC `BS SIZE` 설정 일치를 확인했다. V2 생성 비트스트림의 ZCU104 실보드 동작과 10월 POR 수정 보드 비트스트림·TF 설계 간 구성 프레임 단위 계보는 `(확인 필요)`. [체크포인트 3](build/vivado/reports/CHECKPOINT3.md) · [체크포인트 4](build/vivado/reports/CHECKPOINT4.md) · [체크포인트 5](build/vivado/reports/CHECKPOINT5.md)
 
 ---
 
@@ -606,7 +639,7 @@ AXI 응답 관측기(response_observer) ─▶ safety_guard.event_error
   - **RTL 테스트벤치 (🟢 v2 존재 — `checker/tb/`):**
     - `checker/tb/checker_hysteresis_tb.v`: Schmitt 밴드(인밴드 무변화), `pr_busy` ack까지 트리거 유지, 중복 트리거 방지, `DWELL_FRAMES=1` 억제 자가 검증 TB.
     - `checker/tb/checker_to_dfxc_tb.v`: `checker_hysteresis → dfxc_trigger_adapter → [PG374 계약 모델 BFM] → rm_ap_idle` 모델 연동 TB.
-    - `checker/tb/checker_ip_tb.v`: `checker_scan` 합성 RTL 포함 `checker_ip` 통합 TB(AXI-Lite 맵 + 버스트 DDR 읽기 모델). 초기본 `checker_ip.v` 기준으로 AXI USER 와이어 5개를 선언하고 `dut(.*)`로 연결하므로 TF 최종본 `checker_ip.v`와의 포트 호환성은 `(확인 필요)`.
+    - `checker/tb/checker_ip_tb.v`: `checker_scan` 합성 RTL 포함 `checker_ip` 통합 TB(AXI-Lite 맵 + 버스트 DDR 읽기 모델). `xvlog --sv` · `xelab` · `xsim`으로 V2 HLS 내보내기 RTL(`build/checker_scan/solution1/impl/verilog/*.v`) 및 TF 최종본 `checker_ip.v`와 함께 실행해 수정 없이 통과했다(`checker_ip_tb PASS: real HLS RTL, m_axi DDR model, ap_vld, runtime recalibration, status bank`, `frames=5 swaps=3 drain=4 swap=38`). `dut(.*)` 연결이 미사용 AXI USER 와이어 5개를 무시하므로 포트 호환이 확인되었다(로그: `build/handoff_tb/`).
 
 ---
 

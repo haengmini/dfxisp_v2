@@ -26,7 +26,7 @@ PL 정적 요소(Static Logic) RTL 4개는 정본의 최종 통합 설계 `timeo
   - 출력: `icap_i[31:0]` ← `ICAPE3.O`, `icap_avail` ← `ICAPE3.AVAIL`, `icap_prdone` ← `ICAPE3.PRDONE`, `icap_prerror` ← `ICAPE3.PRERROR`
 
 ### 2. `dfx_safety_guard.v`
-- **파라미터:** RTL 기본값은 `TIMEOUT_CYCLES=1024`이며, 최종 BD는 `TIMEOUT_CYCLES=10000000`으로 설정한다(`TF/edit_bd.tcl:8–12`).
+- **파라미터:** RTL 기본값은 `TIMEOUT_CYCLES=1024`이며, TF 최종 BD와 V2 통합 BD는 `TIMEOUT_CYCLES=10000000`으로 설정한다. [V2 BD 설정](../vivado/build_static_bd.tcl)
 - **입출력:**
   - 입력: `clk`, `rst_n`, `ctrl[7:0]`, `candidate[1:0]`, `rm_idle`, `drain_ctrl`, `drain_read`, `drain_write`, `shutdown_req`, `decouple`, `event_error`, `status_valid`, `dfx_status[31:0]`
   - 출력: `hw_triggers[1:0]`, `shutdown_ack`, `guard_status[31:0]`
@@ -68,7 +68,7 @@ TF의 `project/dfx_zcu104.srcs/sources_1/bd/NormalISP_zcu104_design1/NormalISP_z
 | `dfx_controller_0/vsm_VS_0_event_error` | `response_error_or/Op1` | 1-bit OR (`util_vector_logic`) |
 | `response_observer/fault_now` | `response_error_or/Op2` | 조합 선행 오류 신호 |
 | `response_error_or/Res` | `safety_guard/event_error` | DFXC 오류 또는 AXI 오류 시 가드 fault 래치 |
-| `isp_rp/rm_ap_idle` | `safety_guard/rm_idle`, `checker_ip_0/rm_ap_idle` | BD 키 `isp_rp_rm_ap_idle`. 정본은 두 ISP의 HLS 생성 Verilog에 `assign rm_ap_idle = ap_idle;`을 삽입했다(`TF/idle_ip_repo/NormalISP/hdl/verilog/NormalISP.v:277`, LowlightISP도 277행). |
+| `isp_rp/rm_ap_idle` | `safety_guard/rm_idle`, `checker_ip_0/rm_ap_idle` | TF는 HLS 생성 Verilog에 `assign rm_ap_idle = ap_idle;`을 삽입했다(`TF/idle_ip_repo/NormalISP/hdl/verilog/NormalISP.v:277`). V2 RM은 `ap_ctrl_hs` 코어의 `ap_idle`을 직접 작성한 제어 래퍼로 전달한다. |
 | `checker_ip_0/vs_hw_triggers` → `safety_guard/candidate` | `safety_guard/hw_triggers` → DFXC `vsm_VS_0_hw_triggers` | checker 내부 `dfxc_trigger_adapter`가 후보를 생성하고 가드가 전환 요청을 승인한다. |
 | `safety_guard/shutdown_ack` | DFXC `vsm_VS_0_rm_shutdown_ack` | 가드는 요청, permit, RM idle, 세 경로의 drain 및 오류 상태로 ACK를 산출한다(`TF/dfx_safety_guard.v:28–31`). |
 | permit GPIO `gpio_io_o[7:0]`; 가드 `guard_status[31:0]` | `safety_guard/ctrl`; GPIO `gpio2_io_i` | BD 키 `frame_idle_permit_gpio_gpio_io_o`, `safety_guard_guard_status` |

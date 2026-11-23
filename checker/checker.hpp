@@ -57,7 +57,7 @@ static inline int checker_select_mode(const uint16_t* raw, int width, int height
     const bool below_exit = dark_pct100 < exit_pct * n;
     hyst_flags = (above_enter ? DFXISP_HYST_ABOVE_ENTER : 0) |
                  (below_exit ? DFXISP_HYST_BELOW_EXIT : 0);
-    // The single-frame verdict (Arm2 runtime branch / golden contract) keeps
+    // The single-frame verdict (Arm2 runtime branch / reference contract) keeps
     // the deployed C1 threshold (62), independent of the Schmitt band edges;
     // the Schmitt state machine consumes the flags outside this core.
     return (dark_pct100 > verdict_pct * n) ? DFXISP_MODE_LOW_LIGHT : DFXISP_MODE_NORMAL;

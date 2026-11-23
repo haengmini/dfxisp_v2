@@ -24,7 +24,7 @@ PL 정적 요소(Static Logic)의 장면 판정기 HLS 코어와 RTL 제어 모�
 6. **`tb/` (RTL 테스트벤치 3종)**  
    `checker_hysteresis_tb.v`(히스테리시스 단위), `checker_to_dfxc_tb.v`(PG374 계약 모델 연동), `checker_ip_tb.v`(`checker_scan` RTL 통합).
    - `checker_hysteresis_tb.v`와 `checker_to_dfxc_tb.v`는 대상 RTL이 초기본과 동일해 포트가 일치한다.
-   - `checker_ip_tb.v`는 초기본 `checker_ip.v` 기준으로 작성되어 미사용 AXI USER 와이어 5개(`AWUSER`/`WUSER`/`ARUSER`/`RUSER`/`BUSER`)를 선언하고 `dut(.*)`로 연결하므로, TF 최종본 `checker_ip.v`와의 컴파일·포트 호환성은 `(확인 필요)`.
+   - `checker_ip_tb.v`는 `xvlog --sv` · `xelab` · `xsim`으로 V2 `checker_scan` RTL 및 TF 최종본 `checker_ip.v`와 함께 실행해 수정 없이 통과했다(`dut(.*)`가 미사용 AXI USER 와이어 5개를 무시, `checker_ip_tb PASS`, 로그: `build/handoff_tb/`).
 
 ## 핵심 상수 및 배선
 
